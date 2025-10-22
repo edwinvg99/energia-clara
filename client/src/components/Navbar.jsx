@@ -31,13 +31,13 @@ function Navbar() {
         </Link>
       </div>
 
-      <div className="flex space-x-8 text-gray-300 items-center">
-        <Link to="/" className="hover:text-emerald-400 transition">Inicio</Link>
-        <Link to="/beneficios" className="hover:text-emerald-400 transition">Beneficios</Link>
-        <Link to="/proceso" className="hover:text-emerald-400 transition">Proceso</Link>
-        <Link to="/actores" className="hover:text-emerald-400 transition">Actores</Link>
-        <Link to="/normativas" className="hover:text-emerald-400 transition">Normativas</Link>
-        <Link to="/educativo" className="hover:text-emerald-400 transition">Educativo</Link>
+      <div className="flex space-x-8 text-white items-center">
+        <Link to="/" className="text-white hover:text-emerald-400 transition">Inicio</Link>
+        <Link to="/beneficios" className="text-white hover:text-emerald-400 transition">Beneficios</Link>
+        <Link to="/proceso" className="text-white hover:text-emerald-400 transition">Proceso</Link>
+        <Link to="/actores" className="text-white hover:text-emerald-400 transition">Actores</Link>
+        <Link to="/normativas" className="text-white hover:text-emerald-400 transition">Normativas</Link>
+        <Link to="/educativo" className="text-white hover:text-emerald-400 transition">Educativo</Link>
 
         {user && (
           <div className="relative">
