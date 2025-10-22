@@ -34,7 +34,7 @@ function Navbar() {
       <div className="flex space-x-8 text-white items-center">
         <Link to="/" className="text-white hover:text-emerald-400 transition">Inicio</Link>
         <Link to="/beneficios" className="text-white hover:text-emerald-400 transition">Beneficios</Link>
-        <Link to="/proceso" className="text-white hover:text-emerald-400 transition">Proceso</Link>
+        <Link to="/procesos" className="text-white hover:text-emerald-400 transition">Proceso</Link>
         <Link to="/actores" className="text-white hover:text-emerald-400 transition">Actores</Link>
         <Link to="/normativas" className="text-white hover:text-emerald-400 transition">Normativas</Link>
         <Link to="/educativo" className="text-white hover:text-emerald-400 transition">Educativo</Link>

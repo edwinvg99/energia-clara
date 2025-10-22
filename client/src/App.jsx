@@ -5,6 +5,10 @@ import Navbar from './components/Navbar';
 import Login from './components/Login';
 import Register from './components/Register';
 import Home from './components/Home';
+import Beneficios from './components/Beneficios';
+import Procesos from './components/Procesos';
+import Actores from './components/Actores';
+import Normativas from './components/Normativas';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useContext(UserContext);
@@ -56,6 +60,10 @@ function App() {
         <Route path="/educativo" element={<ProtectedRoute><Educativo /></ProtectedRoute>} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/beneficios" element={<Beneficios />} />
+        <Route path="/procesos" element={<Procesos />} />
+        <Route path="/actores" element={<Actores />} />
+        <Route path="/normativas" element={<Normativas />} />
         {/* otras rutas */}
       </Routes>
     </BrowserRouter>

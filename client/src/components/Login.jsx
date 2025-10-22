@@ -109,7 +109,6 @@ function Login() {
           {/* Header */}
           <div className="px-8 pt-10 pb-6 text-center">
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Iniciar Sesión</h2>
-            <p className="text-gray-600">Accede a tu cuenta de Energía Clara</p>
           </div>
 
           {/* Form */}
@@ -173,10 +172,6 @@ function Login() {
           </form>
         </div>
 
-        {/* Footer */}
-        <p className="text-center text-white text-xs mt-6 font-bold">
-          © 2024 Energía Clara. Todos los derechos reservados.
-        </p>
       </div>
     </div>
   );

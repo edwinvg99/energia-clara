@@ -237,7 +237,6 @@ function Register() {
           
           <div className="px-8 pt-10 pb-6 text-center">
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Crear Cuenta</h2>
-            <p className="text-gray-600">Únete a Energía Clara</p>
           </div>
 
           <form onSubmit={handleSubmit} className="px-8 pb-8">
@@ -355,9 +354,6 @@ function Register() {
           </form>
         </div>
 
-        <p className="text-center text-slate-100 text-xs mt-6 font-bold">
-          © 2024 Energía Clara. Todos los derechos reservados.
-        </p>
       </div>
     </div>
   );
