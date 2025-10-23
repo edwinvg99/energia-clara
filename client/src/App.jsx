@@ -9,6 +9,7 @@ import Beneficios from './components/Beneficios';
 import Procesos from './components/Procesos';
 import Actores from './components/Actores';
 import Normativas from './components/Normativas';
+import Footer from './components/Footer';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useContext(UserContext);
@@ -64,9 +65,12 @@ function App() {
         <Route path="/procesos" element={<Procesos />} />
         <Route path="/actores" element={<Actores />} />
         <Route path="/normativas" element={<Normativas />} />
+        
         {/* otras rutas */}
       </Routes>
+      <Footer />
     </BrowserRouter>
+    
   );
 }
 

@@ -1,12 +1,18 @@
 import React from "react";
+import Beneficios from "./Beneficios";
+import Procesos from "./Procesos";
+import Actores from "./Actores";
+import Normativas from "./Normativas";
+import { CheckCircle, BookOpen, Users } from "lucide-react";
 
 const HERO_IMAGE_URL =
   "https://www.thecircularlab.com/web/app/uploads/2024/07/post-tcl-energia-limpia.jpg";
 
 function Home() {
   return (
-    <div className="h-screen bg-slate-950 text-white overflow-hidden">
-      <section className="relative isolate h-full">
+    <div className="flex flex-col w-full overflow-x-hidden">
+      {/* HERO (pantalla inicial) */}
+      <section className="relative isolate h-screen bg-slate-950 text-white overflow-hidden">
         <div className="absolute inset-0">
           <img
             src={HERO_IMAGE_URL}
@@ -36,49 +42,76 @@ function Home() {
 
             <div className="flex flex-wrap gap-4">
               <a
-                href="#informacion"
-                className="inline-flex items-center justify-center rounded-full bg-linear-to-r from-emerald-500 to-emerald-400 px-6 py-3 text-sm font-semibold text-slate-900 shadow-lg shadow-emerald-500/30 transition-all duration-200 hover:-translate-y-0.5 hover:from-emerald-400 hover:to-emerald-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 "
+                href="#beneficios"
+                className="inline-flex items-center justify-center rounded-full bg-linear-to-r from-emerald-500 to-emerald-400 px-3 py-2 text-sm font-semibold text-slate-900 shadow-lg shadow-emerald-500/30 transition-all duration-200 hover:-translate-y-0.5 hover:from-emerald-400 hover:to-emerald-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 "
               >
                 Explorar información
               </a>
               <a
-                href="/procesos"
-                className="inline-flex items-center justify-center rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:border-white/40 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+                href="#procesos"
+                className="inline-flex items-center justify-center rounded-full border border-white/20 px-3 py-2 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:border-white/40 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
               >
                 Ver procesos
               </a>
             </div>
-
-            <div className="grid gap-4 text-sm sm:grid-cols-3 mt-20">
-              <div className="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur">
-                <p className="font-semibold text-emerald-500">
-                  Información verificada
-                </p>
-                <p className="mt-1 text-slate-200/80">
-                  Fuentes oficiales y datos actualizados para tomar decisiones
-                  informadas.
-                </p>
-              </div>
-              <div className="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur">
-                <p className="font-semibold text-emerald-500">
-                  Fuentes confiables
-                </p>
-                <p className="mt-1 text-slate-200/80">
-                  Contenido curado con apoyo de expertos en transición
-                  energética.
-                </p>
-              </div>
-              <div className="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur">
-                <p className="font-semibold text-emerald-500">
-                  Para comunidades
-                </p>
-                <p className="mt-1 text-slate-200/80">
-                  Recursos diseñados para liderar proyectos energéticos locales.
-                </p>
+            <div className="relative mt-0 border-t border-white/10 pt-0">
+              <div className="grid gap-8 text-center sm:grid-cols-3 px-4">
+                {[  
+                  {
+                    icon: <CheckCircle className="w-10 h-10 text-emerald-400" />,
+                    title: "Información Verificada",
+                    text: "Fuentes oficiales y datos actualizados para tomar decisiones informadas.",
+                  },
+                  {
+                    icon: <BookOpen className="w-10 h-10 text-emerald-400" />,
+                    title: "Fuentes Confiables",
+                    text: "Contenido curado con apoyo de expertos en transición energética.",
+                  },
+                  {
+                    icon: <Users className="w-10 h-10 text-emerald-400" />,
+                    title: "Para Comunidades",
+                    text: "Recursos diseñados para liderar proyectos energéticos locales.",
+                  },
+                ].map((item, index) => (
+                  <div
+                    key={index}
+                    className="group flex flex-col items-center justify-center p-6 rounded-xl transition-all duration-500 hover:bg-white/5 hover:shadow-lg hover:shadow-emerald-500/10"
+                  >
+                    <div className="transition-transform duration-500 group-hover:scale-110">
+                      {item.icon}
+                    </div>
+                    <p className="mt-3 text-base font-semibold text-white">
+                      {item.title}
+                    </p>
+                    <p className="mt-1 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity duration-500 text-sm max-w-xs">
+                      {item.text}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </div>
+      </section>
+
+      {/* Sección de Beneficios */}
+      <section id="beneficios" className="bg-white">
+        <Beneficios />
+      </section>
+
+      {/* Sección de Procesos */}
+      <section id="procesos" className="bg-gray-50">
+        <Procesos />
+      </section>
+
+      {/* Sección de Actores */}
+      <section id="actores" className=" bg-white">
+        <Actores />
+      </section>
+
+      {/* Sección de Normativas */}
+      <section id="normativas" className="bg-gray-50">
+        <Normativas />
       </section>
     </div>
   );
