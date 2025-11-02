@@ -86,7 +86,17 @@ router.post('/login', async (req, res) => {
     if (!isMatch) return res.status(400).json({ message: "Credenciales inválidas" });
     
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    res.json({ token, user: { id: user._id, nombre: user.nombre, email: user.email } });
+    res.json({ 
+      token, 
+      user: { 
+        id: user._id, 
+        nombre: user.nombre, 
+        apellido: user.apellido,
+        email: user.email,
+        universidad: user.universidad,
+        ciudad: user.ciudad
+      } 
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error en el servidor" });
