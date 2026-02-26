@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useNavigate, Link } from "react-router-dom";
+import API_URL from '../api';
 
 const UNIVERSIDADES = [
   "Tecnologico de Antioquia",
@@ -208,7 +209,7 @@ function Register() {
     setServerError("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/auth/register", {
+      const res = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
