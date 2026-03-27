@@ -113,7 +113,7 @@ router.post('/forgot-password', async (req, res) => {
         service_id: process.env.EMAILJS_SERVICE_ID,
         template_id: process.env.EMAILJS_TEMPLATE_ID,
         user_id: process.env.EMAILJS_PUBLIC_KEY,
-        accessToken: process.env.EMAILJS_PRIVATE_KEY,
+        ...(process.env.EMAILJS_PRIVATE_KEY && { accessToken: process.env.EMAILJS_PRIVATE_KEY }),
         template_params: {
           name: `${user.nombre} ${user.apellido}`.trim(),
           email: user.email,
@@ -128,7 +128,11 @@ router.post('/forgot-password', async (req, res) => {
       });
     } catch (emailError) {
       // Si falla el envío SMTP, logueamos el error pero NO perdemos el token
-      console.error('Error al enviar email:', emailError.message);
+      if (emailError.response) {
+        console.error('Error al enviar email:', emailError.response.status, emailError.response.data);
+      } else {
+        console.error('Error al enviar email:', emailError.message);
+      }
       console.warn('El token de reset fue generado correctamente pero el email no pudo enviarse.');
       console.warn('URL de reset (usar manualmente):', resetURL);
 
