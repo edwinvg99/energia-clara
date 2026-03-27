@@ -1,7 +1,7 @@
 const express = require('express');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
-const nodemailer = require('nodemailer');
+const axios = require('axios');
 const User = require('../models/User');
 
 const router = express.Router();
@@ -24,27 +24,7 @@ setInterval(() => {
   }
 }, 15 * 60 * 1000);
 
-// ============================================================
-// CONFIGURACIÓN DE TRANSPORTE DE EMAIL
-// ============================================================
-function createTransporter() {
-  // Transporte por defecto: Gmail SMTP con IPv4 forzado.
-  // Ajustar host/port si se usa otro proveedor.
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: Number(process.env.SMTP_PORT || 465),
-    secure: true,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-    tls: {
-      servername: process.env.SMTP_HOST || 'smtp.gmail.com',
-      rejectUnauthorized: false,
-    },
-    socketOptions: { family: 4 },
-  });
-}
+const EMAILJS_ENDPOINT = 'https://api.emailjs.com/api/v1.0/email/send';
 
 // ============================================================
 // RATE LIMITING SIMPLE PARA SOLICITUDES DE RESET
@@ -117,8 +97,8 @@ router.post('/forgot-password', async (req, res) => {
     const resetURL = `${frontendURL}/reset-password/${token}`;
 
     // Verificar configuración de email
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      console.warn('⚠ Variables EMAIL_USER y EMAIL_PASS no configuradas. Token generado:', token);
+    if (!process.env.EMAILJS_SERVICE_ID || !process.env.EMAILJS_TEMPLATE_ID || !process.env.EMAILJS_PUBLIC_KEY || !process.env.EMAILJS_PRIVATE_KEY) {
+      console.warn('⚠ Variables de EmailJS no configuradas. Token generado:', token);
       console.warn('⚠ URL de reset:', resetURL);
       return res.json({
         message: 'Si el correo está registrado, recibirás un enlace de recuperación.',
@@ -129,43 +109,18 @@ router.post('/forgot-password', async (req, res) => {
 
     // Enviar email
     try {
-      const transporter = createTransporter();
-      await transporter.sendMail({
-        from: `"Energía Clara" <${process.env.EMAIL_USER}>`,
-        to: email,
-        subject: 'Recuperación de contraseña - Energía Clara',
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="background: linear-gradient(135deg, #0f172a, #1e293b); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
-              <h1 style="color: #10b981; margin: 0; font-size: 24px;">Energía Clara</h1>
-              <p style="color: #94a3b8; margin: 8px 0 0;">Plataforma Educativa TDEA</p>
-            </div>
-            <div style="background: #ffffff; padding: 30px; border: 1px solid #e2e8f0; border-top: none;">
-              <h2 style="color: #1e293b; font-size: 20px;">Recuperación de contraseña</h2>
-              <p style="color: #475569; line-height: 1.6;">
-                Hola <strong>${user.nombre}</strong>,
-              </p>
-              <p style="color: #475569; line-height: 1.6;">
-                Recibimos una solicitud para restablecer tu contraseña. Haz clic en el botón a continuación para crear una nueva:
-              </p>
-              <div style="text-align: center; margin: 30px 0;">
-                <a href="${resetURL}" style="background: #10b981; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px; display: inline-block;">
-                  Restablecer contraseña
-                </a>
-              </div>
-              <p style="color: #94a3b8; font-size: 13px; line-height: 1.5;">
-                Este enlace expira en <strong>30 minutos</strong>. Si no solicitaste este cambio, ignora este correo.
-              </p>
-              <p style="color: #cbd5e1; font-size: 11px; margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
-                Si el botón no funciona, copia y pega este enlace en tu navegador:<br>
-                <a href="${resetURL}" style="color: #10b981;">${resetURL}</a>
-              </p>
-            </div>
-            <div style="background: #f8fafc; padding: 15px; border-radius: 0 0 12px 12px; text-align: center; border: 1px solid #e2e8f0; border-top: none;">
-              <p style="color: #94a3b8; font-size: 12px; margin: 0;">Tecnológico de Antioquia - TDEA</p>
-            </div>
-          </div>
-        `,
+      await axios.post(EMAILJS_ENDPOINT, {
+        service_id: process.env.EMAILJS_SERVICE_ID,
+        template_id: process.env.EMAILJS_TEMPLATE_ID,
+        user_id: process.env.EMAILJS_PUBLIC_KEY,
+        accessToken: process.env.EMAILJS_PRIVATE_KEY,
+        template_params: {
+          name: `${user.nombre} ${user.apellido}`.trim(),
+          email: user.email,
+          link: resetURL,
+        },
+      }, {
+        headers: { 'Content-Type': 'application/json' },
       });
 
       return res.json({
@@ -173,7 +128,7 @@ router.post('/forgot-password', async (req, res) => {
       });
     } catch (emailError) {
       // Si falla el envío SMTP, logueamos el error pero NO perdemos el token
-      console.error('Error al enviar email SMTP:', emailError.message);
+      console.error('Error al enviar email:', emailError.message);
       console.warn('El token de reset fue generado correctamente pero el email no pudo enviarse.');
       console.warn('URL de reset (usar manualmente):', resetURL);
 
