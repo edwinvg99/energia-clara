@@ -2,6 +2,7 @@ const express = require('express');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
+const dns = require('dns');
 const User = require('../models/User');
 
 const router = express.Router();
@@ -27,6 +28,10 @@ setInterval(() => {
 // ============================================================
 // CONFIGURACIÓN DE TRANSPORTE DE EMAIL
 // ============================================================
+const ipv4Lookup = (hostname, options, callback) => {
+  return dns.lookup(hostname, { ...options, family: 4, all: false }, callback);
+};
+
 function createTransporter() {
   // Transporte por defecto: Gmail SMTP con IPv4 forzado.
   // Ajustar host/port si se usa otro proveedor.
@@ -38,7 +43,11 @@ function createTransporter() {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
-    family: 4,
+    tls: {
+      servername: process.env.SMTP_HOST || 'smtp.gmail.com',
+      rejectUnauthorized: false,
+    },
+    lookup: ipv4Lookup,
   });
 }
 
