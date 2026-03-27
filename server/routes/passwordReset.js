@@ -28,17 +28,17 @@ setInterval(() => {
 // CONFIGURACIÓN DE TRANSPORTE DE EMAIL
 // ============================================================
 function createTransporter() {
-  // Se usa Gmail por defecto; configurar variables de entorno:
-  //   EMAIL_USER=tu-correo@gmail.com
-  //   EMAIL_PASS=contraseña-de-aplicación (App Password de Google)
-  //
-  // Para otros proveedores, ajustar host y port.
+  // Transporte por defecto: Gmail SMTP con IPv4 forzado.
+  // Ajustar host/port si se usa otro proveedor.
   return nodemailer.createTransport({
-    service: 'gmail',
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: Number(process.env.SMTP_PORT || 465),
+    secure: true,
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
+    family: 4,
   });
 }
 
