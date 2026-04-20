@@ -51,6 +51,8 @@ function Navbar() {
             <Link to="/actores" className="text-white hover:text-emerald-400 transition font-medium text-sm">Actores</Link>
             <Link to="/normativas" className="text-white hover:text-emerald-400 transition font-medium text-sm">Normativas</Link>
             <Link to="/noticias" className="text-white hover:text-emerald-400 transition font-medium text-sm">Noticias</Link>
+            <Link to="/documentos-creg" className="text-white hover:text-emerald-400 transition font-medium text-sm">Docs CREG</Link>
+            <Link to="/mercado-energia" className="text-white hover:text-emerald-400 transition font-medium text-sm">Mercado Energía</Link>
             <Link to="/educativo" className="text-white hover:text-emerald-400 transition font-medium text-sm">Educativo</Link>
 
             {user ? (
@@ -161,15 +163,29 @@ function Navbar() {
             >
               Normativas
             </Link>
-            <Link 
-              to="/noticias" 
+            <Link
+              to="/noticias"
               onClick={closeMobileMenu}
               className="block text-white hover:text-emerald-400 transition font-medium py-2"
             >
               Noticias
             </Link>
-            <Link 
-              to="/educativo" 
+            <Link
+              to="/documentos-creg"
+              onClick={closeMobileMenu}
+              className="block text-white hover:text-emerald-400 transition font-medium py-2"
+            >
+              Docs CREG
+            </Link>
+            <Link
+              to="/mercado-energia"
+              onClick={closeMobileMenu}
+              className="block text-white hover:text-emerald-400 transition font-medium py-2"
+            >
+              Mercado Energía
+            </Link>
+            <Link
+              to="/educativo"
               onClick={closeMobileMenu}
               className="block text-white hover:text-emerald-400 transition font-medium py-2"
             >

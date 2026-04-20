@@ -2,30 +2,23 @@ const express = require('express');
 const router = express.Router();
 
 
+// Límite global diario como red de seguridad para no agotar la cuota gratuita de Gemini (1500 RPD)
 const RATE_LIMITS = {
-  MAX_REQUESTS_PER_MINUTE_PER_IP: 10,
-  MAX_REQUESTS_PER_DAY_GLOBAL: 500,
-  MAX_REQUESTS_PER_DAY_PER_IP: 30,
-  MAX_OUTPUT_TOKENS: 300,
+  MAX_REQUESTS_PER_DAY_GLOBAL: 800,
+  MAX_OUTPUT_TOKENS: 600,
 };
 
-// Almacenamiento en memoria para rate limiting
 const rateLimitStore = {
-  perMinute: new Map(),   // IP -> { count, resetTime }
-  perDayIP: new Map(),    // IP -> { count, resetDate }
   globalDaily: { count: 0, resetDate: new Date().toDateString() },
 };
 
-function checkRateLimit(ip) {
-  const now = Date.now();
+function checkRateLimit() {
   const today = new Date().toDateString();
 
-  // Reset diario global
   if (rateLimitStore.globalDaily.resetDate !== today) {
     rateLimitStore.globalDaily = { count: 0, resetDate: today };
   }
 
-  // Verificar límite diario global
   if (rateLimitStore.globalDaily.count >= RATE_LIMITS.MAX_REQUESTS_PER_DAY_GLOBAL) {
     return {
       allowed: false,
@@ -34,64 +27,11 @@ function checkRateLimit(ip) {
     };
   }
 
-  // Verificar límite por minuto por IP
-  const minuteData = rateLimitStore.perMinute.get(ip);
-  if (minuteData) {
-    if (now < minuteData.resetTime) {
-      if (minuteData.count >= RATE_LIMITS.MAX_REQUESTS_PER_MINUTE_PER_IP) {
-        const waitSeconds = Math.ceil((minuteData.resetTime - now) / 1000);
-        return {
-          allowed: false,
-          message: `Demasiadas consultas. Espera ${waitSeconds} segundos antes de preguntar de nuevo.`,
-          retryAfter: `${waitSeconds}s`
-        };
-      }
-    } else {
-      rateLimitStore.perMinute.set(ip, { count: 0, resetTime: now + 60000 });
-    }
-  }
-
-  // Verificar límite diario por IP
-  const dayIPData = rateLimitStore.perDayIP.get(ip);
-  if (dayIPData) {
-    if (dayIPData.resetDate === today) {
-      if (dayIPData.count >= RATE_LIMITS.MAX_REQUESTS_PER_DAY_PER_IP) {
-        return {
-          allowed: false,
-          message: 'Alcanzaste tu límite diario de preguntas (30). Intenta mañana o usa las preguntas predeterminadas.',
-          retryAfter: 'mañana'
-        };
-      }
-    } else {
-      rateLimitStore.perDayIP.set(ip, { count: 0, resetDate: today });
-    }
-  }
-
   return { allowed: true };
 }
 
-function incrementRateLimit(ip) {
-  const now = Date.now();
-  const today = new Date().toDateString();
-
-  // Incrementar global
+function incrementRateLimit() {
   rateLimitStore.globalDaily.count++;
-
-  // Incrementar por minuto
-  const minuteData = rateLimitStore.perMinute.get(ip);
-  if (minuteData && now < minuteData.resetTime) {
-    minuteData.count++;
-  } else {
-    rateLimitStore.perMinute.set(ip, { count: 1, resetTime: now + 60000 });
-  }
-
-  // Incrementar por día por IP
-  const dayIPData = rateLimitStore.perDayIP.get(ip);
-  if (dayIPData && dayIPData.resetDate === today) {
-    dayIPData.count++;
-  } else {
-    rateLimitStore.perDayIP.set(ip, { count: 1, resetDate: today });
-  }
 }
 
 // ============================================================
@@ -192,14 +132,8 @@ router.post('/message', async (req, res) => {
       return res.status(400).json({ error: 'El mensaje no puede estar vacío.' });
     }
 
-    // Limitar longitud del mensaje del usuario
-    if (message.length > 500) {
-      return res.status(400).json({ error: 'El mensaje es demasiado largo. Máximo 500 caracteres.' });
-    }
-
     // Verificar rate limits
-    const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
-    const rateCheck = checkRateLimit(clientIP);
+    const rateCheck = checkRateLimit();
     if (!rateCheck.allowed) {
       return res.status(429).json({
         error: rateCheck.message,
@@ -242,19 +176,12 @@ router.post('/message', async (req, res) => {
     const result = await chat.sendMessage(message.trim());
     const response = result.response.text();
 
-    // Incrementar rate limit solo si la llamada fue exitosa
-    incrementRateLimit(clientIP);
-
-    // Calcular consultas restantes para el usuario
-    const today = new Date().toDateString();
-    const dayIPData = rateLimitStore.perDayIP.get(clientIP);
-    const remainingQueries = RATE_LIMITS.MAX_REQUESTS_PER_DAY_PER_IP -
-      (dayIPData && dayIPData.resetDate === today ? dayIPData.count : 0);
+    incrementRateLimit();
 
     return res.json({
       response,
       source: 'gemini',
-      remainingQueries: Math.max(0, remainingQueries)
+      remainingQueries: null
     });
 
   } catch (error) {
@@ -284,20 +211,10 @@ router.get('/predefined', (req, res) => {
   res.json({ questions });
 });
 
-// Endpoint para verificar estado del chatbot y límites
 router.get('/status', (req, res) => {
-  const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
-  const today = new Date().toDateString();
-  const dayIPData = rateLimitStore.perDayIP.get(clientIP);
-  const usedToday = dayIPData && dayIPData.resetDate === today ? dayIPData.count : 0;
-
   res.json({
     active: !!process.env.GEMINI_API_KEY,
-    limits: {
-      maxPerDay: RATE_LIMITS.MAX_REQUESTS_PER_DAY_PER_IP,
-      usedToday,
-      remaining: Math.max(0, RATE_LIMITS.MAX_REQUESTS_PER_DAY_PER_IP - usedToday),
-    },
+    limits: null,
     predefinedAvailable: Object.keys(PREDEFINED_QA).length,
   });
 });

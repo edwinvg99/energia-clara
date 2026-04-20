@@ -9,6 +9,8 @@ const authRoutes = require('./routes/auth');
 const chatbotRoutes = require('./routes/chatbot');
 const passwordResetRoutes = require('./routes/passwordReset');
 const noticiasRoutes = require('./routes/noticias');
+const cregRoutes = require('./routes/creg');
+const simemRoutes = require('./routes/simem');
 
 if (process.env.NODE_ENV !== 'production') {
   const dns = require('dns');
@@ -91,6 +93,8 @@ app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/password', authLimiter, passwordResetRoutes);
 app.use('/api/noticias', noticiasRoutes);
+app.use('/api/creg', cregRoutes);
+app.use('/api/simem', simemRoutes);
 
 // ============================================================
 // HEALTH CHECK
