@@ -1,6 +1,19 @@
 const express = require('express');
 const axios = require('axios');
+const https = require('https');
+const dns = require('dns');
 const router = express.Router();
+
+// Force HTTP requests to use dns.resolve4 (respects dns.setServers) instead of
+// the OS getaddrinfo which ignores our custom DNS server configuration.
+const httpsAgent = new https.Agent({
+  lookup(hostname, _opts, cb) {
+    dns.resolve4(hostname, (err, addrs) => {
+      if (err) return cb(err);
+      cb(null, addrs[0], 4);
+    });
+  },
+});
 
 async function withRetry(fn, retries = 3, delayMs = 1500) {
   for (let i = 0; i < retries; i++) {
@@ -122,6 +135,7 @@ async function fetchMetrica(metricId, rangoDias) {
   try {
     const res = await withRetry(() => axios.post(meta.url, body, {
       timeout: 25000,
+      httpsAgent,
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
     }));
     apiResponse = res.data;

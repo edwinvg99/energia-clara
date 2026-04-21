@@ -1,6 +1,17 @@
 const express = require('express');
 const axios = require('axios');
+const https = require('https');
+const dns = require('dns');
 const router = express.Router();
+
+const httpsAgent = new https.Agent({
+  lookup(hostname, _opts, cb) {
+    dns.resolve4(hostname, (err, addrs) => {
+      if (err) return cb(err);
+      cb(null, addrs[0], 4);
+    });
+  },
+});
 
 async function withRetry(fn, retries = 3, delayMs = 1500) {
   for (let i = 0; i < retries; i++) {
@@ -67,6 +78,7 @@ async function fetchGeneracion(rangoDias = 7) {
 
   const { data: apiResponse } = await withRetry(() => axios.get(url, {
     timeout: 25000,
+    httpsAgent,
     headers: {
       'Accept': 'application/json',
       'Accept-Language': 'es-CO,es;q=0.9',
