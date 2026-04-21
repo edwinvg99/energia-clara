@@ -16,7 +16,9 @@ const sinergoxRoutes = require('./routes/sinergox');
 // Override DNS to use public resolvers — required in production (Railway) where
 // default DNS can't resolve Colombian government/utility domains (EAI_AGAIN).
 const dns = require('dns');
-dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+// Colombian ISP DNS (Claro, ETB) first — servapibi.xm.com.co only resolves
+// from Colombian nameservers. Public resolvers (8.8.8.8) as fallback.
+dns.setServers(['200.21.64.2', '200.21.64.65', '190.7.214.91', '8.8.8.8', '1.1.1.1']);
 dns.setDefaultResultOrder('ipv4first');
 
 const app = express();
