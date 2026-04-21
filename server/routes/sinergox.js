@@ -28,21 +28,23 @@ async function withRetry(fn, retries = 3, delayMs = 1500) {
 const CACHE_TTL = 60 * 60 * 1000;
 
 // Métricas con MetricId, endpoint, entity y tipo de agregación para datos horarios
+const XM_PROXY = 'https://sinergox-proxy.velasquezgiraldoedwin.workers.dev';
+
 const METRICAS = {
   Gene: {
     label: 'Generación Total',
     unidad: 'kWh',
     color: 'emerald',
     entity: 'Sistema',
-    url: 'https://servapibi.xm.com.co/hourly',
-    agregacion: 'suma',   // sumar las 24 horas para obtener el total diario
+    url: `${XM_PROXY}/hourly`,
+    agregacion: 'suma',
   },
   DemaSIN: {
     label: 'Demanda SIN',
     unidad: 'kWh',
     color: 'blue',
     entity: 'Sistema',
-    url: 'https://servapibi.xm.com.co/daily',
+    url: `${XM_PROXY}/daily`,
     agregacion: null,
   },
   PPPrecBolsNaci: {
@@ -50,7 +52,7 @@ const METRICAS = {
     unidad: 'COP/kWh',
     color: 'amber',
     entity: 'Sistema',
-    url: 'https://servapibi.xm.com.co/daily',
+    url: `${XM_PROXY}/daily`,
     agregacion: null,
   },
   VoluUtilDiarEner: {
@@ -58,7 +60,7 @@ const METRICAS = {
     unidad: 'kWh',
     color: 'cyan',
     entity: 'Sistema',
-    url: 'https://servapibi.xm.com.co/daily',
+    url: `${XM_PROXY}/daily`,
     agregacion: null,
   },
   factorEmisionCO2e: {
@@ -66,15 +68,15 @@ const METRICAS = {
     unidad: 'gCO2e/kWh',
     color: 'rose',
     entity: 'Sistema',
-    url: 'https://servapibi.xm.com.co/hourly',
-    agregacion: 'promedio',  // promedio de las 24 horas
+    url: `${XM_PROXY}/hourly`,
+    agregacion: 'promedio',
   },
   ENFICC: {
     label: 'Energía Firme (ENFICC)',
     unidad: 'kWh',
     color: 'purple',
     entity: 'Sistema',
-    url: 'https://servapibi.xm.com.co/daily',
+    url: `${XM_PROXY}/daily`,
     agregacion: null,
   },
   PerdidasEner: {
@@ -82,7 +84,7 @@ const METRICAS = {
     unidad: 'kWh',
     color: 'orange',
     entity: 'Sistema',
-    url: 'https://servapibi.xm.com.co/hourly',
+    url: `${XM_PROXY}/hourly`,
     agregacion: 'suma',
   },
   GeneIdea: {
@@ -90,7 +92,7 @@ const METRICAS = {
     unidad: 'kWh',
     color: 'teal',
     entity: 'Sistema',
-    url: 'https://servapibi.xm.com.co/hourly',
+    url: `${XM_PROXY}/hourly`,
     agregacion: 'suma',
   },
 };
@@ -207,7 +209,7 @@ async function fetchMetrica(metricId, rangoDias) {
 // Debug: listado de métricas con búsqueda opcional ?q= y ?entity=
 router.get('/listado-metricas', async (req, res) => {
   try {
-    const { data } = await axios.post('https://servapibi.xm.com.co/lists',
+    const { data } = await axios.post(`${XM_PROXY}/lists`,
       { MetricId: 'ListadoMetricas' },
       { timeout: 20000, headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' } }
     );
@@ -245,7 +247,7 @@ router.get('/test/:metricId', async (req, res) => {
   const results = {};
   for (const entity of entities) {
     const body = { MetricId: req.params.metricId, StartDate: startDate, EndDate: endDate, Entity: entity, Filter: [] };
-    for (const url of ['https://servapibi.xm.com.co/daily', 'https://servapibi.xm.com.co/hourly']) {
+    for (const url of [`${XM_PROXY}/daily`, `${XM_PROXY}/hourly`]) {
       const key = `${entity}@${url.split('/').pop()}`;
       try {
         const { data } = await axios.post(url, body, { timeout: 10000, headers: { 'Content-Type': 'application/json' } });
