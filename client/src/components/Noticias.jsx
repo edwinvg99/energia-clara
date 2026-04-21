@@ -65,26 +65,31 @@ function Noticias() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-3 mb-4">
-            <div className="bg-emerald-100 rounded-xl p-3">
-              <Newspaper className="h-8 w-8 text-emerald-600" />
-            </div>
-            <h1 className="text-4xl font-bold text-gray-900">Noticias de Energía</h1>
+    <div className="min-h-screen bg-gray-50">
+
+      {/* ── DARK HERO ── */}
+      <div className="bg-gradient-to-r from-slate-900 to-slate-800 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-3 mb-4">
+            
+          
           </div>
-          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            Últimas noticias sobre energías renovables en Colombia, recopiladas automáticamente 
+          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3">
+            Noticias de  <span className="text-emerald-400">Energía</span>
+          </h1>
+          <p className="text-slate-300 text-lg max-w-3xl">
+            Últimas noticias sobre energías renovables en Colombia, recopiladas automáticamente
             de fuentes oficiales y medios especializados.
           </p>
           {cacheInfo && (
-            <p className="text-xs text-gray-400 mt-2">
+            <p className="text-xs text-slate-400 mt-3">
               Última actualización: {new Date(cacheInfo.lastFetch).toLocaleString('es-CO')}
             </p>
           )}
         </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
         {/* Filtros y búsqueda */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-8">

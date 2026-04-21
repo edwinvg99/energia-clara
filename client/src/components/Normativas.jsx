@@ -1,234 +1,232 @@
 import { useState } from "react";
 import {
-  ChevronDown,
-  ChevronUp,
-  FileText,
   Scale,
+  FileText,
   BookOpen,
   Award,
+  ChevronDown,
+  ChevronUp,
   ExternalLink,
 } from "lucide-react";
 
-// eslint-disable-next-line no-unused-vars
-const Accordion = ({ icon: IconComponent, color, title, items }) => {
+const categorias = [
+  {
+    Icono: Scale,
+    iconBoxBg: "bg-rose-50",
+    iconColor: "text-rose-500",
+    titulo: "Leyes y Decretos",
+    items: [
+      {
+        title: "Ley 1715 de 2014",
+        description:
+          "Regula la integración de energías renovables no convencionales al Sistema Energético Nacional",
+        note: "Marco legal principal",
+      },
+      {
+        title: "Ley 2099 de 2021",
+        description:
+          "Dicta disposiciones para la transición energética y modernización del mercado",
+        note: "Actualización normativa",
+      },
+    ],
+  },
+  {
+    Icono: FileText,
+    iconBoxBg: "bg-blue-50",
+    iconColor: "text-blue-500",
+    titulo: "Resoluciones CREG",
+    items: [
+      {
+        title: "Resolución CREG 030 de 2018",
+        description:
+          "Regula la autogeneración a pequeña escala y generación distribuida",
+        note: "Permite venta de excedentes a la red",
+      },
+      {
+        title: "Resolución CREG 174 de 2021",
+        description:
+          "Define metodología para cálculo de costos de conexión",
+        note: "Clarifica costos de conexión al sistema",
+      },
+    ],
+  },
+  {
+    Icono: BookOpen,
+    iconBoxBg: "bg-green-50",
+    iconColor: "text-green-600",
+    titulo: "Normas Técnicas",
+    items: [
+      {
+        title: "NTC 2050 (RETIE)",
+        description:
+          "Reglamento Técnico de Instalaciones Eléctricas — estándares de seguridad",
+        note: "Obligatorio para instalaciones",
+      },
+      {
+        title: "NTC 5746",
+        description:
+          "Sistemas fotovoltaicos conectados a la red eléctrica — especificaciones técnicas",
+        note: "Aplica a sistemas solares",
+      },
+    ],
+  },
+  {
+    Icono: Award,
+    iconBoxBg: "bg-amber-50",
+    iconColor: "text-amber-500",
+    titulo: "Incentivos Tributarios",
+    items: [
+      {
+        title: "Deducción de Renta",
+        description:
+          "Hasta el 50% del valor de la inversión deducible del impuesto de renta por 5 años",
+        note: "Beneficio por 5 años",
+      },
+      {
+        title: "Exclusión de IVA",
+        description:
+          "Equipos para generación renovable exentos de IVA — reducción directa de costos",
+        note: "Aplica a equipos importados",
+      },
+      {
+        title: "Exención Arancelaria",
+        description:
+          "No pago de aranceles para importación de equipos no producidos en Colombia",
+        note: "Reducción costos de importación",
+      },
+    ],
+  },
+];
+
+function Accordion({ Icono, iconBoxBg, iconColor, titulo, items }) {
   const [open, setOpen] = useState(true);
 
   return (
-    <div className="border rounded-2xl shadow-cyan-950 shadow-2xl mb-6 bg-gray-100">
+    <div className="bg-white rounded-xl border border-gray-100 shadow-sm mb-4">
       {/* Header */}
       <button
         onClick={() => setOpen(!open)}
-        className="flex justify-between items-center w-full p-5 bg-gray-300 hover:bg-gray-50 transition-colors rounded-2xl"
+        className="w-full p-5 flex justify-between items-center cursor-pointer hover:bg-gray-50 rounded-xl transition-colors"
       >
         <div className="flex items-center gap-3">
-          <div
-            className={`p-3 rounded-xl ${color} bg-opacity-10 flex items-center justify-center`}
-          >
-            <IconComponent className="w-6 h-6 text-gray-900" />
+          <div className={`${iconBoxBg} w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0`}>
+            <Icono className={`w-5 h-5 ${iconColor}`} />
           </div>
-          <h2 className="text-lg font-semibold text-gray-800">
-            {title}
-          </h2>
+          <span className="font-semibold text-gray-800 text-base text-left">
+            {titulo}
+          </span>
         </div>
         {open ? (
-          <ChevronUp className="text-gray-400" />
+          <ChevronUp className="w-5 h-5 text-gray-400 flex-shrink-0" />
         ) : (
-          <ChevronDown className="text-gray-400" />
+          <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0" />
         )}
       </button>
 
       {/* Body */}
       {open && (
-        <div className="p-5 pt-0 space-y-4">
+        <div className="px-5 pb-5 space-y-3">
           {items.map((item, idx) => (
-            <div
-              key={idx}
-              className="bg-gray-50 rounded-xl p-4 transition-all text-center"
-            >
-              <h3 className="font-semibold text-gray-900">
+            <div key={idx} className="bg-gray-50 rounded-xl p-4">
+              <h3 className="font-semibold text-gray-900 text-sm">
                 {item.title}
               </h3>
-              <p className="text-gray-600 text-sm mt-1">
-                {item.description}
-              </p>
-              <div className="flex items-center justify-center-safe gap-2 mt-3">
-                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                <span className="text-green-700 text-sm bg-green-50 px-3 py-1 rounded-full">
-                  {item.note}
-                </span>
-              </div>
+              <p className="text-gray-600 text-sm mt-1">{item.description}</p>
+              <span className="inline-block mt-2 bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full">
+                {item.note}
+              </span>
             </div>
           ))}
         </div>
       )}
     </div>
   );
-};
-
-const FuentesOficiales = () => (
-  <div className="bg-green-50 border border-green-200 rounded-2xl p-6 mt-10 text-left">
-    <div className="flex items-center gap-3 mb-2">
-      <div className="p-3 rounded-xl bg-green-200 bg-opacity-10">
-        <ExternalLink className="text-green-600 w-6 h-6" />
-      </div>
-      <h3 className="text-lg font-semibold text-gray-800">
-        Fuentes Oficiales de Información
-      </h3>
-    </div>
-    <p className="text-gray-700 text-sm mb-3">
-      Para consultar el texto completo de las normativas y obtener información actualizada, puedes visitar:
-    </p>
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
-      <a
-        href="#"
-        className="flex items-center gap-2 text-green-700 hover:underline"
-      >
-        <ExternalLink size={14} /> Ministerio de Minas y Energía
-      </a>
-      <a
-        href="#"
-        className="flex items-center gap-2 text-green-700 hover:underline"
-      >
-        <ExternalLink size={14} /> UPME
-      </a>
-      <a
-        href="#"
-        className="flex items-center gap-2 text-green-700 hover:underline"
-      >
-        <ExternalLink size={14} /> CREG
-      </a>
-      <a
-        href="#"
-        className="flex items-center gap-2 text-green-700 hover:underline"
-      >
-        <ExternalLink size={14} /> ICONTEC (Normas Técnicas)
-      </a>
-    </div>
-  </div>
-);
-
-const Nota = () => (
-  <div className="bg-yellow-50 border-l-4 border-yellow-400 rounded-r-xl mt-6 p-4 text-left">
-    <p className="text-gray-700 text-sm">
-      <span className="font-semibold">Nota:</span> Esta información tiene fines educativos e informativos. 
-      Para casos específicos, se recomienda consultar con asesores legales y técnicos especializados.
-    </p>
-  </div>
-);
+}
 
 export default function Normativas() {
-    const leyes = [
-    {
-      title: "Ley 1715 de 2014",
-      description:
-        "Regula la integración de energías renovables no convencionales al Sistema Energético Nacional",
-      note: "Marco legal principal para energías renovables",
-    },
-    {
-      title: "Ley 2099 de 2021",
-      description:
-        "Dicta disposiciones para la transición energética, el dinamismo del mercado energético y otras disposiciones",
-      note: "Actualización y modernización del marco normativo",
-    },
-  ];
-
-  const resoluciones = [
-    {
-      title: "Resolución CREG 030 de 2018",
-      description:
-        "Regula actividad de autogeneración a pequeña escala y generación distribuida",
-      note: "Permite venta de excedentes a la red",
-    },
-    {
-      title: "Resolución CREG 174 de 2021",
-      description:
-        "Define metodología para cálculo de costos de conexión",
-      note: "Clarifica costos de conexión al sistema",
-    },
-  ];
-  const normas = [
-    {
-      title: "NTC 2050 (RETIE)",
-      description: "Reglamento Técnico de Instalaciones Eléctricas",
-      note: "Estándares de seguridad en instalaciones",
-    },
-    {
-      title: "NTC 5746",
-      description: "Sistemas fotovoltaicos conectados a la red eléctrica",
-      note: "Especificaciones técnicas de sistemas solares",
-    },
-  ];
-
-  const incentivos = [
-    {
-      title: "Deducción de Renta",
-      description:
-        "Hasta 50% del valor de la inversión deducible del impuesto de renta",
-      note: "Beneficio tributario por 5 años",
-    },
-    {
-      title: "Exclusión de IVA",
-      description:
-        "Equipos destinados a generación renovable exentos de IVA",
-      note: "Reducción de costos de implementación",
-    },
-    {
-      title: "Exención Arancelaria",
-      description:
-        "No pago de aranceles para importación de equipos y maquinaria",
-      note: "Aplicable a equipos no producidos en Colombia",
-    },
-  ];
-
   return (
-    <div className="min-h-screen bg-slate-100">
-      <section className="max-w-4xl mx-auto py-16 px-6 text-center">
-        {/* Encabezado */}
-        <span className="inline-block bg-gray-300 text-red-600 font-semibold px-4 py-1 rounded-full text-sm mb-3">
-          Marco Legal
-        </span>
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
-          Normativas y Regulaciones
-        </h2>
+    <div className="bg-gray-50 min-h-screen">
+      {/* HERO */}
+      <div className="bg-gradient-to-r from-slate-900 to-slate-800 text-white py-12 px-4">
+        <div className="max-w-4xl mx-auto text-center">
         
-        <p className="text-gray-900 mb-10">
-          Información simplificada sobre las leyes, resoluciones e incentivos que
-          rigen la implementación de energías renovables en Colombia
-        </p>
+          <div className="flex items-center justify-center mb-4">
+           
+          </div>
+          <h1 className="text-3xl md:text-4xl font-bold mb-3">
+            Normativas y             <span className="text-emerald-400">Regulaciones</span>
 
-        {/* Acordeones */}
-        <Accordion
-          icon={Scale}
-          color="bg-red-200"
-          title="Leyes y Decretos"
-          items={leyes}
-        />
-        <Accordion
-          icon  =  {FileText}
-          color="bg-blue-200"
-          title="Resoluciones CREG"
-          items={resoluciones}
-        />
-        
-        <Accordion
-          icon={BookOpen}
-          color="bg-green-100"
-          title="Normas Técnicas"
-          items={normas}
-        />
-        <Accordion
-          icon={Award}
-          color="bg-yellow-200"
-          title="Incentivos"
-          items={incentivos}
-        />
+          </h1>
+          <p className="text-slate-300 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+            Marco legal simplificado: leyes, resoluciones CREG, normas técnicas
+            e incentivos para energías renovables en Colombia
+          </p>
+        </div>
+      </div>
 
-        {/* Fuentes Oficiales */}
-        <FuentesOficiales />
+      {/* CONTENT */}
+      <div className="max-w-4xl mx-auto px-4 py-10">
+        {/* Accordions */}
+        {categorias.map((cat, idx) => (
+          <Accordion
+            key={idx}
+            Icono={cat.Icono}
+            iconBoxBg={cat.iconBoxBg}
+            iconColor={cat.iconColor}
+            titulo={cat.titulo}
+            items={cat.items}
+          />
+        ))}
 
-        {/* Nota Final */}
-        <Nota />
-      </section>
+        {/* Sources box */}
+        <div className="bg-green-50 border border-green-200 rounded-xl p-5 mt-6">
+          <div className="flex items-center gap-2 mb-3">
+            <ExternalLink className="w-5 h-5 text-green-600 flex-shrink-0" />
+            <h3 className="font-semibold text-gray-800 text-base">
+              Fuentes Oficiales
+            </h3>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <a
+              href="#"
+              className="flex items-center gap-2 text-green-700 text-sm hover:underline"
+            >
+              <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" />
+              Ministerio de Minas y Energía
+            </a>
+            <a
+              href="#"
+              className="flex items-center gap-2 text-green-700 text-sm hover:underline"
+            >
+              <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" />
+              UPME
+            </a>
+            <a
+              href="#"
+              className="flex items-center gap-2 text-green-700 text-sm hover:underline"
+            >
+              <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" />
+              CREG
+            </a>
+            <a
+              href="#"
+              className="flex items-center gap-2 text-green-700 text-sm hover:underline"
+            >
+              <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" />
+              ICONTEC
+            </a>
+          </div>
+        </div>
+
+        {/* Note box */}
+        <div className="bg-amber-50 border-l-4 border-amber-400 rounded-r-xl p-4 mt-4">
+          <p className="text-gray-700 text-sm leading-relaxed">
+            <span className="font-semibold">Nota:</span> Esta información tiene
+            fines educativos. Para casos específicos, consulta con asesores
+            legales y técnicos especializados.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

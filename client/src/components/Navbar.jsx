@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { UserContext } from '../context/UserContextDef';
 import { Menu, X, Zap } from 'lucide-react';
 
@@ -7,6 +7,7 @@ function Navbar() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logoutUser } = useContext(UserContext);
 
   const handleLogout = () => {
@@ -28,6 +29,22 @@ function Navbar() {
     setShowMobileMenu(false);
   };
 
+  // Desktop link: always has a bottom border (transparent when inactive, emerald when active)
+  const desktopLink = (path) =>
+    `font-medium text-sm transition pb-0.5 border-b-2 ${
+      location.pathname === path
+        ? 'text-emerald-400 border-emerald-400'
+        : 'text-white hover:text-emerald-400 border-transparent'
+    }`;
+
+  // Mobile link: left border indicator
+  const mobileLink = (path) =>
+    `block transition font-medium py-2 pl-3 border-l-2 ${
+      location.pathname === path
+        ? 'text-emerald-400 border-emerald-400'
+        : 'text-white hover:text-emerald-400 border-transparent'
+    }`;
+
   return (
     <nav className="bg-linear-to-r from-slate-900 to-slate-800 shadow-lg sticky top-0 z-50 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -45,16 +62,16 @@ function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-6">
-            <Link to="/" className="text-white hover:text-emerald-400 transition font-medium text-sm">Inicio</Link>
-            <Link to="/beneficios" className="text-white hover:text-emerald-400 transition font-medium text-sm">Beneficios</Link>
-            <Link to="/procesos" className="text-white hover:text-emerald-400 transition font-medium text-sm">Proceso</Link>
-            <Link to="/actores" className="text-white hover:text-emerald-400 transition font-medium text-sm">Actores</Link>
-            <Link to="/normativas" className="text-white hover:text-emerald-400 transition font-medium text-sm">Normativas</Link>
-            <Link to="/noticias" className="text-white hover:text-emerald-400 transition font-medium text-sm">Noticias</Link>
-            <Link to="/documentos-creg" className="text-white hover:text-emerald-400 transition font-medium text-sm">Docs CREG</Link>
-            <Link to="/mercado-energia" className="text-white hover:text-emerald-400 transition font-medium text-sm">Mercado Energía</Link>
-            <Link to="/educativo" className="text-white hover:text-emerald-400 transition font-medium text-sm">Educativo</Link>
-            <Link to="/indicadores" className="text-white hover:text-emerald-400 transition font-medium text-sm">Indicadores</Link>
+            <Link to="/" className={desktopLink('/')}>Inicio</Link>
+            <Link to="/beneficios" className={desktopLink('/beneficios')}>Beneficios</Link>
+            <Link to="/procesos" className={desktopLink('/procesos')}>Proceso</Link>
+            <Link to="/actores" className={desktopLink('/actores')}>Actores</Link>
+            <Link to="/normativas" className={desktopLink('/normativas')}>Normativas</Link>
+            <Link to="/noticias" className={desktopLink('/noticias')}>Noticias</Link>
+            <Link to="/documentos-creg" className={desktopLink('/documentos-creg')}>Docs CREG</Link>
+            <Link to="/mercado-energia" className={desktopLink('/mercado-energia')}>Mercado Energía</Link>
+            <Link to="/educativo" className={desktopLink('/educativo')}>Educativo</Link>
+            <Link to="/indicadores" className={desktopLink('/indicadores')}>Indicadores</Link>
 
             {user ? (
               <div className="relative">
@@ -66,10 +83,10 @@ function Navbar() {
                     <span className="text-sm font-semibold">{user.nombre?.charAt(0)}</span>
                   </div>
                   <span className="font-medium text-sm">{user.nombre}</span>
-                  <svg 
-                    className={`w-4 h-4 transform transition-transform duration-200 ${showDropdown ? 'rotate-180' : ''}`} 
-                    fill="none" 
-                    stroke="currentColor" 
+                  <svg
+                    className={`w-4 h-4 transform transition-transform duration-200 ${showDropdown ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -106,8 +123,8 @@ function Navbar() {
                 )}
               </div>
             ) : (
-              <Link 
-                to="/login" 
+              <Link
+                to="/login"
                 className="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2 rounded-lg transition font-medium text-sm shadow-lg hover:shadow-emerald-500/50"
               >
                 Iniciar Sesión
@@ -128,81 +145,21 @@ function Navbar() {
       {/* Mobile Navigation */}
       {showMobileMenu && (
         <div className="lg:hidden bg-slate-800 border-t border-slate-700 animate-fadeIn">
-          <div className="px-4 py-4 space-y-3">
-            <Link 
-              to="/" 
-              onClick={closeMobileMenu}
-              className="block text-white hover:text-emerald-400 transition font-medium py-2"
-            >
-              Inicio
-            </Link>
-            <Link 
-              to="/beneficios" 
-              onClick={closeMobileMenu}
-              className="block text-white hover:text-emerald-400 transition font-medium py-2"
-            >
-              Beneficios
-            </Link>
-            <Link 
-              to="/procesos" 
-              onClick={closeMobileMenu}
-              className="block text-white hover:text-emerald-400 transition font-medium py-2"
-            >
-              Proceso
-            </Link>
-            <Link 
-              to="/actores" 
-              onClick={closeMobileMenu}
-              className="block text-white hover:text-emerald-400 transition font-medium py-2"
-            >
-              Actores
-            </Link>
-            <Link 
-              to="/normativas" 
-              onClick={closeMobileMenu}
-              className="block text-white hover:text-emerald-400 transition font-medium py-2"
-            >
-              Normativas
-            </Link>
-            <Link
-              to="/noticias"
-              onClick={closeMobileMenu}
-              className="block text-white hover:text-emerald-400 transition font-medium py-2"
-            >
-              Noticias
-            </Link>
-            <Link
-              to="/documentos-creg"
-              onClick={closeMobileMenu}
-              className="block text-white hover:text-emerald-400 transition font-medium py-2"
-            >
-              Docs CREG
-            </Link>
-            <Link
-              to="/mercado-energia"
-              onClick={closeMobileMenu}
-              className="block text-white hover:text-emerald-400 transition font-medium py-2"
-            >
-              Mercado Energía
-            </Link>
-            <Link
-              to="/educativo"
-              onClick={closeMobileMenu}
-              className="block text-white hover:text-emerald-400 transition font-medium py-2"
-            >
-              Educativo
-            </Link>
-            <Link
-              to="/indicadores"
-              onClick={closeMobileMenu}
-              className="block text-white hover:text-emerald-400 transition font-medium py-2"
-            >
-              Indicadores
-            </Link>
+          <div className="px-4 py-4 space-y-1">
+            <Link to="/" onClick={closeMobileMenu} className={mobileLink('/')}>Inicio</Link>
+            <Link to="/beneficios" onClick={closeMobileMenu} className={mobileLink('/beneficios')}>Beneficios</Link>
+            <Link to="/procesos" onClick={closeMobileMenu} className={mobileLink('/procesos')}>Proceso</Link>
+            <Link to="/actores" onClick={closeMobileMenu} className={mobileLink('/actores')}>Actores</Link>
+            <Link to="/normativas" onClick={closeMobileMenu} className={mobileLink('/normativas')}>Normativas</Link>
+            <Link to="/noticias" onClick={closeMobileMenu} className={mobileLink('/noticias')}>Noticias</Link>
+            <Link to="/documentos-creg" onClick={closeMobileMenu} className={mobileLink('/documentos-creg')}>Docs CREG</Link>
+            <Link to="/mercado-energia" onClick={closeMobileMenu} className={mobileLink('/mercado-energia')}>Mercado Energía</Link>
+            <Link to="/educativo" onClick={closeMobileMenu} className={mobileLink('/educativo')}>Educativo</Link>
+            <Link to="/indicadores" onClick={closeMobileMenu} className={mobileLink('/indicadores')}>Indicadores</Link>
 
             {user ? (
               <div className="pt-3 border-t border-slate-700 space-y-3">
-                <div className="flex items-center space-x-3 py-2">
+                <div className="flex items-center space-x-3 py-2 pl-3">
                   <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center">
                     <span className="text-white font-semibold">{user.nombre?.charAt(0)}</span>
                   </div>
@@ -222,10 +179,10 @@ function Navbar() {
                 </button>
               </div>
             ) : (
-              <Link 
-                to="/login" 
+              <Link
+                to="/login"
                 onClick={closeMobileMenu}
-                className="block w-full text-center bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2.5 rounded-lg transition font-medium shadow-lg"
+                className="block w-full text-center bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2.5 rounded-lg transition font-medium shadow-lg mt-3"
               >
                 Iniciar Sesión
               </Link>
