@@ -27,6 +27,7 @@ const ROUTE_TIPS = {
   '/educativo': '¿Listo para aprender? Puedo orientarte sobre los 4 módulos educativos disponibles.',
   '/documentos-creg': '¿Tienes dudas sobre algún documento de la CREG? Puedo explicarte resoluciones, circulares o proyectos.',
   '/mercado-energia': '¿Quieres entender qué es el SIMEM o cómo funciona el mercado mayorista de energía en Colombia?',
+  '/indicadores': '¿Quieres saber qué significan el precio de bolsa, el factor de emisión o el volumen útil de embalses?',
 };
 
 // Mensaje de bienvenida contextual al abrir el chat por primera vez en cada sección
@@ -40,6 +41,7 @@ const ROUTE_WELCOME = {
   '/educativo': '¡Hola! Estás en la sección **Educativa**. Tengo información sobre los 4 módulos: Transición Energética, Autogeneración, Generación Distribuida y Comunidades Energéticas. ¿Por dónde empezamos?',
   '/documentos-creg': '¡Hola! Estás viendo los **Documentos CREG**. Puedo explicarte el contenido o alcance de cualquier resolución, circular o auto de la CREG. ¿Sobre qué documento tienes dudas?',
   '/mercado-energia': '¡Hola! Estás en el **Mercado de Energía SIMEM**. Puedo explicarte qué significa cada tipo de fuente (Hidráulica, Térmica, Solar, Eólica), cómo se calcula el % renovable y cómo funciona el mercado mayorista de energía en Colombia. ¿Tienes alguna duda?',
+  '/indicadores': '¡Hola! Estás en los **Indicadores del Mercado Eléctrico**. Puedo explicarte qué es el precio de bolsa, el factor de emisión CO₂, el volumen útil de embalses, y cómo estos datos reflejan la salud del sistema energético colombiano. ¿Tienes alguna duda?',
 };
 
 function getRouteKey(pathname) {

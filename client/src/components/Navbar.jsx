@@ -54,6 +54,7 @@ function Navbar() {
             <Link to="/documentos-creg" className="text-white hover:text-emerald-400 transition font-medium text-sm">Docs CREG</Link>
             <Link to="/mercado-energia" className="text-white hover:text-emerald-400 transition font-medium text-sm">Mercado Energía</Link>
             <Link to="/educativo" className="text-white hover:text-emerald-400 transition font-medium text-sm">Educativo</Link>
+            <Link to="/indicadores" className="text-white hover:text-emerald-400 transition font-medium text-sm">Indicadores</Link>
 
             {user ? (
               <div className="relative">
@@ -190,6 +191,13 @@ function Navbar() {
               className="block text-white hover:text-emerald-400 transition font-medium py-2"
             >
               Educativo
+            </Link>
+            <Link
+              to="/indicadores"
+              onClick={closeMobileMenu}
+              className="block text-white hover:text-emerald-400 transition font-medium py-2"
+            >
+              Indicadores
             </Link>
 
             {user ? (

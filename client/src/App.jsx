@@ -17,6 +17,7 @@ import ResetPassword from './components/ResetPassword';
 import Noticias from './components/Noticias';
 import DocumentosCREG from './components/DocumentosCREG';
 import SIMEM from './components/SIMEM';
+import Indicadores from './components/Indicadores';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useContext(UserContext);
@@ -55,6 +56,7 @@ function App() {
         <Route path="/documentos-creg" element={<DocumentosCREG />} />
         <Route path="/mercado-energia" element={<SIMEM />} />
         <Route path="/noticias" element={<Noticias />} />
+        <Route path="/indicadores" element={<Indicadores />} />
         {/* otras rutas */}
       </Routes>
       <Chatbot />

@@ -11,6 +11,7 @@ const passwordResetRoutes = require('./routes/passwordReset');
 const noticiasRoutes = require('./routes/noticias');
 const cregRoutes = require('./routes/creg');
 const simemRoutes = require('./routes/simem');
+const sinergoxRoutes = require('./routes/sinergox');
 
 if (process.env.NODE_ENV !== 'production') {
   const dns = require('dns');
@@ -95,6 +96,7 @@ app.use('/api/password', authLimiter, passwordResetRoutes);
 app.use('/api/noticias', noticiasRoutes);
 app.use('/api/creg', cregRoutes);
 app.use('/api/simem', simemRoutes);
+app.use('/api/sinergox', sinergoxRoutes);
 
 // ============================================================
 // HEALTH CHECK
