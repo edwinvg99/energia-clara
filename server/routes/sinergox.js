@@ -2,6 +2,16 @@ const express = require('express');
 const axios = require('axios');
 const router = express.Router();
 
+async function withRetry(fn, retries = 3, delayMs = 1500) {
+  for (let i = 0; i < retries; i++) {
+    try { return await fn(); }
+    catch (err) {
+      if (i === retries - 1) throw err;
+      await new Promise(r => setTimeout(r, delayMs * (i + 1)));
+    }
+  }
+}
+
 const CACHE_TTL = 60 * 60 * 1000;
 
 // Métricas con MetricId, endpoint, entity y tipo de agregación para datos horarios
@@ -110,10 +120,10 @@ async function fetchMetrica(metricId, rangoDias) {
 
   let apiResponse;
   try {
-    const res = await axios.post(meta.url, body, {
-      timeout: 20000,
+    const res = await withRetry(() => axios.post(meta.url, body, {
+      timeout: 25000,
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    });
+    }));
     apiResponse = res.data;
   } catch (err) {
     console.error(`[SINERGOX] ${metricId} error: ${JSON.stringify(err.response?.data) || err.message}`);

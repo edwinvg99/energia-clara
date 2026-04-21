@@ -13,10 +13,11 @@ const cregRoutes = require('./routes/creg');
 const simemRoutes = require('./routes/simem');
 const sinergoxRoutes = require('./routes/sinergox');
 
-if (process.env.NODE_ENV !== 'production') {
-  const dns = require('dns');
-  dns.setServers(['8.8.8.8', '8.8.4.4']);
-}
+// Override DNS to use public resolvers — required in production (Railway) where
+// default DNS can't resolve Colombian government/utility domains (EAI_AGAIN).
+const dns = require('dns');
+dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+dns.setDefaultResultOrder('ipv4first');
 
 const app = express();
 app.set('trust proxy', 1);

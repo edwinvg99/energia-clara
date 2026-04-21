@@ -2,6 +2,16 @@ const express = require('express');
 const axios = require('axios');
 const router = express.Router();
 
+async function withRetry(fn, retries = 3, delayMs = 1500) {
+  for (let i = 0; i < retries; i++) {
+    try { return await fn(); }
+    catch (err) {
+      if (i === retries - 1) throw err;
+      await new Promise(r => setTimeout(r, delayMs * (i + 1)));
+    }
+  }
+}
+
 const SIMEM_BASE = 'https://www.simem.co/backend-files/api/PublicData';
 const DATASET_GENERACION = 'E17D25';
 const CACHE_TTL = 60 * 60 * 1000; // 1 hora
@@ -55,14 +65,14 @@ async function fetchGeneracion(rangoDias = 7) {
 
   const url = `${SIMEM_BASE}?startDate=${startDate}&endDate=${endDate}&datasetId=${DATASET_GENERACION}`;
 
-  const { data: apiResponse } = await axios.get(url, {
-    timeout: 20000,
+  const { data: apiResponse } = await withRetry(() => axios.get(url, {
+    timeout: 25000,
     headers: {
       'Accept': 'application/json',
       'Accept-Language': 'es-CO,es;q=0.9',
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
     },
-  });
+  }));
 
   // SIMEM puede devolver records bajo result.records o result.data
   const records = apiResponse?.result?.records
