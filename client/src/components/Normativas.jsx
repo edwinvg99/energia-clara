@@ -44,8 +44,7 @@ const categorias = [
       },
       {
         title: "Resolución CREG 174 de 2021",
-        description:
-          "Define metodología para cálculo de costos de conexión",
+        description: "Define metodología para cálculo de costos de conexión",
         note: "Clarifica costos de conexión al sistema",
       },
     ],
@@ -109,7 +108,9 @@ function Accordion({ Icono, iconBoxBg, iconColor, titulo, items }) {
         className="w-full p-5 flex justify-between items-center cursor-pointer hover:bg-gray-50 rounded-xl transition-colors"
       >
         <div className="flex items-center gap-3">
-          <div className={`${iconBoxBg} w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0`}>
+          <div
+            className={`${iconBoxBg} w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0`}
+          >
             <Icono className={`w-5 h-5 ${iconColor}`} />
           </div>
           <span className="font-semibold text-gray-800 text-base text-left">
@@ -149,13 +150,9 @@ export default function Normativas() {
       {/* HERO */}
       <div className="bg-gradient-to-r from-slate-900 to-slate-800 text-white py-12 px-4">
         <div className="max-w-4xl mx-auto text-center">
-        
-          <div className="flex items-center justify-center mb-4">
-           
-          </div>
+          <div className="flex items-center justify-center mb-4"></div>
           <h1 className="text-3xl md:text-4xl font-bold mb-3">
-            Normativas y             <span className="text-emerald-400">Regulaciones</span>
-
+            Normativas y <span className="text-emerald-400">Regulaciones</span>
           </h1>
           <p className="text-slate-300 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
             Marco legal simplificado: leyes, resoluciones CREG, normas técnicas
