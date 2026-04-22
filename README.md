@@ -215,8 +215,7 @@ GET  /api/chatbot/status              # Estado y límites del chatbot
 ### Cloudflare Worker (requerido para indicadores)
 1. Crear cuenta gratuita en [cloudflare.com](https://cloudflare.com) (sin tarjeta)
 2. Ir a **Workers & Pages → Create Worker**
-3. Pegar el código del proxy (ver `docs/DOCUMENTACION_TECNICA.md` sección 5)
-4. La URL generada debe coincidir con la constante `XM_PROXY` en `server/routes/sinergox.js`
+3. La URL generada debe coincidir con la constante `XM_PROXY` en `server/routes/sinergox.js`
 
 ---
 
