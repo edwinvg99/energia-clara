@@ -1,107 +1,139 @@
 # Energía Clara
 
-Plataforma educativa sobre energías renovables desarrollada para el Tecnológico de Antioquia - Institución Universitaria.
+Plataforma web educativa e informativa sobre el mercado de energía eléctrica en Colombia, desarrollada como proyecto de tesis para el Tecnológico de Antioquia - Institución Universitaria.
+
+🔗 **Demo en producción:** [energia-clara-client.up.railway.app](https://energia-clara-client.up.railway.app)
+
+---
 
 ## Descripción
 
-Energía Clara es una aplicación web diseñada para educar y concientizar sobre el uso de energías renovables. Además del módulo educativo base, ahora integra un chatbot con IA, un agregador de noticias nacionales y un flujo completo de recuperación de contraseñas para garantizar disponibilidad durante el despliegue público.
+Energía Clara es una aplicación full-stack que combina educación energética con datos reales del mercado eléctrico colombiano. Integra información del SIMEM, XM S.A. E.S.P., la CREG y fuentes de noticias del sector, presentada de forma accesible para usuarios no especializados.
+
+---
+
+## Funcionalidades
+
+| Sección | Descripción |
+|---|---|
+| **Mercado de Energía** | Mix de generación eléctrica por tipo de fuente (SIMEM · dataset E17D25), con KPIs, gráficas y tabla para 7, 14 o 30 días |
+| **Indicadores** | 8 indicadores clave del mercado mayorista en tiempo real: demanda, precio de bolsa, generación, embalses, emisiones CO₂ y más (XM · API BI) |
+| **Documentos CREG** | Últimas resoluciones, proyectos, circulares y autos publicados por la Comisión de Regulación de Energía y Gas |
+| **Noticias** | Agregador de noticias del sector energético (MinEnergía, SER Colombia, Semana Sostenible, El Tiempo) |
+| **Módulo educativo** | Contenido sobre energías renovables, actores del mercado, procesos y normativas |
+| **Chatbot IA** | Asistente contextual con Google Gemini que adapta sus respuestas según la sección activa |
+| **Autenticación** | Registro, login con JWT y recuperación de contraseña por correo |
+
+---
 
 ## Tecnologías
 
 ### Frontend
-
-- **React 19** - Librería de UI
-- **React Router DOM** - Navegación
-- **Tailwind CSS 4** - Estilos y diseño
-- **Vite** - Build tool y dev server
+- **React 19** — UI
+- **React Router DOM** — Navegación SPA
+- **Tailwind CSS 4** — Estilos
+- **Vite** — Build tool
+- **Lucide React** — Iconografía
 
 ### Backend
+- **Node.js / Express** — Servidor API REST
+- **MongoDB / Mongoose** — Base de datos de usuarios
+- **JWT + bcryptjs** — Autenticación segura
+- **Axios + Cheerio** — Llamadas a APIs externas y scraping
+- **Google Gemini API** — Motor del chatbot
+- **Nodemailer** — Correos de recuperación de contraseña
 
-- **Node.js** - Runtime
-- **Express** - Framework web
-- **MongoDB** - Base de datos
-- **Mongoose** - ODM para MongoDB
-- **JWT** - Autenticación
-- **bcryptjs** - Encriptación de contraseñas
-- **Google Gemini API** - Respuestas del chatbot
-- **Playwright + Cheerio** - Scraping de noticias
-- **Nodemailer** - Envío de correos de recuperación
+### Infraestructura
+- **Railway** — Despliegue de frontend y backend
+- **Cloudflare Workers** — Proxy para la API de XM (`servapibi.xm.com.co`), necesario porque el dominio solo resuelve desde redes colombianas
+- **MongoDB Atlas** — Base de datos en la nube
 
-## Integraciones recientes
+---
 
-- **Chatbot IA**: Bot flotante en todas las vistas, combina preguntas predeterminadas y consultas libres usando Google Gemini (`client/src/components/Chatbot.jsx`, `server/routes/chatbot.js`).
-- **Agregador de noticias**: Scrapers para MinEnergía, SER Colombia, Semana Sostenible y El Tiempo con caché y filtros (`client/src/components/Noticias.jsx`, `server/routes/noticias.js`).
-- **Recuperación de contraseña**: Flujo completo con correo, token temporal y formulario de restablecimiento (`client/src/components/ForgotPassword.jsx`, `client/src/components/ResetPassword.jsx`, `server/routes/passwordReset.js`).
+## Arquitectura de APIs en producción
 
-## Estructura del Proyecto
+```
+Browser (usuario)
+      │
+      ▼
+React SPA — Railway
+      │
+      ▼
+Express API — Railway (USA)
+      │
+      ├── /api/simem/*      ──── httpsAgent + dns.resolve4 ───► www.simem.co
+      ├── /api/sinergox/*   ──► Cloudflare Worker (Colombia) ──► servapibi.xm.com.co
+      ├── /api/creg/*       ──────────────────────────────────► creg.gov.co
+      ├── /api/chatbot/*    ──────────────────────────────────► Gemini API
+      └── /api/noticias/*   ──────────────────────────────────► Fuentes de noticias
+```
+
+> `servapibi.xm.com.co` solo es resolvible desde ISPs colombianos. Se usa un Cloudflare Worker como intermediario ya que Cloudflare tiene nodos de borde en Colombia.
+
+---
+
+## Estructura del proyecto
 
 ```
 energia-clara/
-├── client/                 # Frontend React
+├── client/                       # Frontend React
 │   ├── src/
-│   │   ├── components/    # Componentes React
+│   │   ├── components/
+│   │   │   ├── SIMEM.jsx         # Mercado de energía
+│   │   │   ├── Indicadores.jsx   # Indicadores XM
+│   │   │   ├── DocumentosCREG.jsx
+│   │   │   ├── Noticias.jsx
+│   │   │   ├── Chatbot.jsx
 │   │   │   ├── Login.jsx
 │   │   │   ├── Register.jsx
-│   │   │   ├── Chatbot.jsx
-│   │   │   ├── Noticias.jsx
 │   │   │   ├── ForgotPassword.jsx
 │   │   │   └── ResetPassword.jsx
-│   │   ├── context/       # Context API
-│   │   │   ├── UserContext.jsx
-│   │   │   └── UserContextDef.jsx
+│   │   ├── services/             # Servicios de API (sin usar en prod, reserva local)
+│   │   ├── context/
 │   │   ├── App.jsx
 │   │   └── main.jsx
 │   └── package.json
 │
-└── server/                # Backend Node.js
-    ├── controllers/       # Lógica de negocio
-    ├── models/           # Modelos de datos
+└── server/                       # Backend Express
+    ├── routes/
+    │   ├── simem.js              # Proxy SIMEM + caché + agregación
+    │   ├── sinergox.js           # Proxy XM vía Cloudflare Worker + caché
+    │   ├── creg.js               # Scraping CREG + caché
+    │   ├── noticias.js           # Scraping noticias + caché
+    │   ├── chatbot.js            # Gemini API + rate limiting
+    │   ├── auth.js               # Registro y login
+    │   └── passwordReset.js      # Recuperación de contraseña
+    ├── models/
     │   └── User.js
-    ├── routes/           # Rutas de API
-    │   ├── auth.js
-    │   ├── chatbot.js
-    │   ├── noticias.js
-    │   └── passwordReset.js
-    ├── server.js         # Punto de entrada
-    ├── middleware/       # Middlewares (por ejemplo logging)
-    ├── .env              # Variables de entorno
+    ├── server.js                 # Punto de entrada
     └── package.json
 ```
 
-## Instalación
+---
 
-### Prerequisitos
+## Instalación local
 
-- Node.js (v16 o superior)
-- MongoDB (local o MongoDB Atlas)
-- npm o yarn
+### Requisitos
+- Node.js v18 o superior
+- MongoDB local o cuenta en MongoDB Atlas
 
-### Configuración
-
-1. **Clonar el repositorio**
+### 1. Clonar el repositorio
 
 ```bash
-git clone <url-del-repositorio>
+git clone https://github.com/edwinvg99/energia-clara.git
 cd energia-clara
 ```
 
-2. **Instalar dependencias del servidor**
+### 2. Instalar dependencias
 
 ```bash
-cd server
-npm install
+cd server && npm install
+cd ../client && npm install
 ```
 
-3. **Instalar dependencias del cliente**
+### 3. Variables de entorno
 
-```bash
-cd ../client
-npm install
-```
-
-4. **Configurar variables de entorno**
-
-Crear archivo `.env` en la carpeta `server/`:
+Crear `server/.env`:
 
 ```env
 MONGO_URI=tu_conexion_mongodb
@@ -109,113 +141,95 @@ JWT_SECRET=tu_secreto_jwt
 PORT=5000
 FRONTEND_URL=http://localhost:5173
 GEMINI_API_KEY=tu_api_key_de_gemini
-EMAIL_USER=tu_correo_gmail
-EMAIL_PASS=app_password
+EMAIL_USER=tu_correo@gmail.com
+EMAIL_PASS=app_password_de_gmail
 ```
 
-Crear archivo `.env` en `client/`:
+Crear `client/.env`:
 
 ```env
 VITE_API_URL=http://localhost:5000
 ```
 
-## Uso
-
-### Iniciar el servidor (Backend)
+### 4. Ejecutar en desarrollo
 
 ```bash
-cd server
-npm run dev
+# Terminal 1 — backend
+cd server && npm run dev
+
+# Terminal 2 — frontend
+cd client && npm run dev
 ```
 
-El servidor se ejecutará en `http://localhost:5000`
+- Backend: `http://localhost:5000`
+- Frontend: `http://localhost:5173`
 
-### Iniciar el cliente (Frontend)
-
-```bash
-cd client
-npm run dev
-```
-
-La aplicación estará disponible en `http://localhost:5173`
-
-## Variables de entorno
-
-| Servicio | Variable           | Descripción                                           |
-| -------- | ------------------ | ------------------------------------------------------ |
-| Backend  | `MONGO_URI`      | Cadena de conexión a MongoDB Atlas o cluster propio   |
-| Backend  | `JWT_SECRET`     | Llave para firmar tokens JWT                           |
-| Backend  | `PORT`           | Puerto de Express (5000 por defecto)                   |
-| Backend  | `FRONTEND_URL`   | URL pública del frontend, usada para enlaces de reset |
-| Backend  | `GEMINI_API_KEY` | API key de Google Gemini para el chatbot               |
-| Backend  | `EMAIL_USER`     | Cuenta Gmail/SMTP que envía correos                   |
-| Backend  | `EMAIL_PASS`     | App password o credencial SMTP                         |
-| Frontend | `VITE_API_URL`   | URL pública del backend                               |
-
-## Despliegue
-
-### Backend (Railway/Render/VPS)
-
-1. Configura todas las variables anteriores en el panel del proveedor.
-2. Instala dependencias (`npm install`) y ejecuta `npm run start`.
-3. En entornos con noticias habilita Playwright (en Railway/Render se instala con `npm install`).
-4. Verifica el estado con `GET /api/health`, `GET /api/chatbot/status` y `GET /api/noticias`.
-
-### Frontend (Vercel/Netlify)
-
-1. Define `VITE_API_URL` apuntando al backend.
-2. Ejecuta `npm install` y `npm run build` 
-3. Configura rewrites para SPA (`/* -> /index.html`).
-4. Tras el deploy, valida que el chatbot y noticias funcionen sin errores CORS.
-
-## Características
-
-### Autenticación
-
-- ✅ Registro de usuarios con validación completa
-- ✅ Inicio de sesión seguro
-- ✅ Tokens JWT para sesiones
-- ✅ Encriptación de contraseñas
-
-### Interfaz de Usuario
-
-- Diseño moderno y responsivo
-- Tema nocturno para Login (azules oscuros)
-- Tema diurno para Register (verdes claros)
-- Animaciones y transiciones suaves
-- Compatible con dispositivos móviles
-
-### Formularios
-
-- Validación en tiempo real
-- Mensajes de error descriptivos
-- Autocompletado personalizado
-- Selectores para universidad y ciudad
-- Recuperación de contraseña con token temporal
-
-## Seguridad
-
-- Contraseñas hasheadas con bcryptjs
-- Tokens JWT para autenticación
-- Variables de entorno para datos sensibles
-- Validación de datos en frontend y backend
-- Protección CORS configurada
+---
 
 ## API Endpoints
 
 ### Autenticación
+```
+POST /api/auth/register
+POST /api/auth/login
+POST /api/password/forgot-password
+POST /api/password/reset-password/:token
+```
 
+### Mercado de Energía (SIMEM)
 ```
-POST /api/auth/register              - Registrar nuevo usuario
-POST /api/auth/login                 - Iniciar sesión
-POST /api/password/forgot-password   - Solicitar enlace de recuperación
-POST /api/password/reset-password/:token - Restablecer contraseña
-POST /api/chatbot/message            - Enviar preguntas al asistente IA
-GET  /api/chatbot/predefined         - Listar preguntas predeterminadas
-GET  /api/noticias                   - Obtener noticias agregadas
-POST /api/noticias/refresh           - Forzar actualización del caché
+GET  /api/simem/generacion?dias=7     # Mix de generación (1–31 días)
+POST /api/simem/refresh               # Invalidar caché
 ```
+
+### Indicadores (XM vía Cloudflare Worker)
+```
+GET  /api/sinergox/indicadores?dias=7  # 8 métricas del mercado mayorista
+POST /api/sinergox/refresh             # Invalidar caché
+GET  /api/sinergox/listado-metricas    # Todas las métricas disponibles en XM
+GET  /api/sinergox/test/:metricId      # Diagnóstico de una métrica
+```
+
+### Otros
+```
+GET  /api/creg/documentos             # Documentos recientes de la CREG
+GET  /api/noticias                    # Noticias del sector energético
+POST /api/chatbot/message             # Consulta al chatbot (Gemini)
+GET  /api/chatbot/status              # Estado y límites del chatbot
+```
+
+---
+
+## Despliegue en Railway
+
+### Backend
+1. Conectar el repositorio en Railway y apuntar a la carpeta `server/`
+2. Agregar las variables de entorno del archivo `.env`
+3. El servidor arranca automáticamente con `npm start`
+
+### Frontend
+1. Conectar el repositorio en Railway apuntando a `client/`
+2. Definir `VITE_API_URL` con la URL pública del backend
+3. Railway detecta Vite automáticamente y ejecuta el build
+
+### Cloudflare Worker (requerido para indicadores)
+1. Crear cuenta gratuita en [cloudflare.com](https://cloudflare.com) (sin tarjeta)
+2. Ir a **Workers & Pages → Create Worker**
+3. Pegar el código del proxy (ver `docs/DOCUMENTACION_TECNICA.md` sección 5)
+4. La URL generada debe coincidir con la constante `XM_PROXY` en `server/routes/sinergox.js`
+
+---
+
+## Seguridad
+- Contraseñas hasheadas con bcryptjs
+- Autenticación con JWT
+- CORS restringido a orígenes permitidos
+- Rate limiting global en el chatbot
+- Variables de entorno para todas las credenciales
+
+---
 
 ## Autores
 
-Desarrollado para el Tecnológico de Antioquia - Institución Universitaria
+Desarrollado para el **Tecnológico de Antioquia - Institución Universitaria**  
+Semestre 10 · Proyecto de Tesis
