@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(grep -E \"\\\\.jsx$\")",
-      "WebFetch(domain:creg.gov.co)"
-    ]
-  }
-}
