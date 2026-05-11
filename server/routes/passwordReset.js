@@ -1,227 +1,152 @@
 const express = require('express');
-const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
-const axios = require('axios');
 const User = require('../models/User');
+const sdk = require('../lib/sdkClient');
+const { AuthServiceSdkError } = require('energy-community-auth-sdk');
 
 const router = express.Router();
 
-// ============================================================
-// ALMACENAMIENTO TEMPORAL DE TOKENS DE RECUPERACIÓN
-// ============================================================
-// En producción se recomienda usar Redis o la BD; para MVP
-// usamos memoria con limpieza automática.
-// ============================================================
-const resetTokens = new Map(); // token -> { email, expiresAt }
-
-// Limpiar tokens expirados cada 15 minutos
-setInterval(() => {
-  const now = Date.now();
-  for (const [token, data] of resetTokens) {
-    if (now > data.expiresAt) {
-      resetTokens.delete(token);
-    }
-  }
-}, 15 * 60 * 1000);
-
-const EMAILJS_ENDPOINT = 'https://api.emailjs.com/api/v1.0/email/send';
-
-// ============================================================
-// RATE LIMITING SIMPLE PARA SOLICITUDES DE RESET
-// ============================================================
-const resetRateLimit = new Map(); // IP -> { count, resetTime }
-const MAX_RESET_PER_HOUR = 5;
-
-function checkResetRateLimit(ip) {
-  const now = Date.now();
-  const data = resetRateLimit.get(ip);
-  if (data && now < data.resetTime) {
-    if (data.count >= MAX_RESET_PER_HOUR) {
-      return false;
-    }
-    data.count++;
-    return true;
-  }
-  resetRateLimit.set(ip, { count: 1, resetTime: now + 3600000 }); // 1 hora
-  return true;
+// Envuelve una promesa con un timeout. Lanza error si supera ms milisegundos.
+function withTimeout(promise, ms, label) {
+  const timeout = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error(`SDK timeout (${ms}ms): ${label}`)), ms)
+  );
+  return Promise.race([promise, timeout]);
 }
+
+const SDK_TIMEOUT_MS = 15000; // 15 segundos máximo por llamada al SDK
 
 // ============================================================
 // POST /forgot-password
-// Envía email con enlace de recuperación
 // ============================================================
 router.post('/forgot-password', async (req, res) => {
-  try {
-    const { email } = req.body;
+  const { email } = req.body;
+  console.log('[forgot-password] Solicitud recibida para email:', email);
 
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return res.status(400).json({ message: 'Ingresa un email válido.' });
-    }
-
-    // Rate limit
-    const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
-    if (!checkResetRateLimit(clientIP)) {
-      return res.status(429).json({
-        message: 'Demasiadas solicitudes. Intenta de nuevo en una hora.',
-      });
-    }
-
-    // Buscar usuario (no revelamos si existe o no por seguridad)
-    const user = await User.findOne({ email: email.toLowerCase().trim() });
-
-    if (!user) {
-      // Respondemos igual para no revelar si el email está registrado
-      return res.json({
-        message: 'Si el correo está registrado, recibirás un enlace de recuperación.',
-      });
-    }
-
-    // Generar token seguro
-    const token = crypto.randomBytes(32).toString('hex');
-    const expiresAt = Date.now() + 30 * 60 * 1000; // 30 minutos
-
-    // Eliminar tokens anteriores del mismo email
-    for (const [existingToken, data] of resetTokens) {
-      if (data.email === email.toLowerCase().trim()) {
-        resetTokens.delete(existingToken);
-      }
-    }
-
-    resetTokens.set(token, {
-      email: email.toLowerCase().trim(),
-      expiresAt,
-    });
-
-    // Construir URL de reset
-    const frontendURL = process.env.FRONTEND_URL || 'http://localhost:5173';
-    const resetURL = `${frontendURL}/reset-password/${token}`;
-
-    // Verificar configuración de email
-    if (!process.env.EMAILJS_SERVICE_ID || !process.env.EMAILJS_TEMPLATE_ID || !process.env.EMAILJS_PUBLIC_KEY || !process.env.EMAILJS_PRIVATE_KEY) {
-      console.warn('⚠ Variables de EmailJS no configuradas. Token generado:', token);
-      console.warn('⚠ URL de reset:', resetURL);
-      return res.json({
-        message: 'Si el correo está registrado, recibirás un enlace de recuperación.',
-        // En desarrollo, devolver el token para pruebas
-        ...(process.env.NODE_ENV !== 'production' && { devToken: token, devResetURL: resetURL }),
-      });
-    }
-
-    // Enviar email
-    try {
-      await axios.post(EMAILJS_ENDPOINT, {
-        service_id: process.env.EMAILJS_SERVICE_ID,
-        template_id: process.env.EMAILJS_TEMPLATE_ID,
-        user_id: process.env.EMAILJS_PUBLIC_KEY,
-        ...(process.env.EMAILJS_PRIVATE_KEY && { accessToken: process.env.EMAILJS_PRIVATE_KEY }),
-        template_params: {
-          name: `${user.nombre} ${user.apellido}`.trim(),
-          email: user.email,
-          link: resetURL,
-        },
-      }, {
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      return res.json({
-        message: 'Si el correo está registrado, recibirás un enlace de recuperación.',
-      });
-    } catch (emailError) {
-      // Si falla el envío SMTP, logueamos el error pero NO perdemos el token
-      if (emailError.response) {
-        console.error('Error al enviar email:', emailError.response.status, emailError.response.data);
-      } else {
-        console.error('Error al enviar email:', emailError.message);
-      }
-      console.warn('El token de reset fue generado correctamente pero el email no pudo enviarse.');
-      console.warn('URL de reset (usar manualmente):', resetURL);
-
-      // En desarrollo, devolvemos el token para que se pueda probar sin email funcional
-      if (process.env.NODE_ENV !== 'production') {
-        return res.json({
-          message: 'No se pudo enviar el correo, pero el enlace de recuperación fue generado.',
-          devToken: token,
-          devResetURL: resetURL,
-          devNote: 'El email SMTP falló. Usa el enlace devResetURL directamente para restablecer la contraseña.',
-        });
-      }
-
-      // En producción, respuesta genérica (no revelar detalles)
-      return res.json({
-        message: 'Si el correo está registrado, recibirás un enlace de recuperación.',
-      });
-    }
-  } catch (error) {
-    console.error('Error en forgot-password:', error.message);
-    return res.status(500).json({
-      message: 'Error al procesar la solicitud. Intenta más tarde.',
-    });
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    console.warn('[forgot-password] Email inválido:', email);
+    return res.status(400).json({ message: 'Ingresa un email válido.' });
   }
+
+  const cleanEmail = email.toLowerCase().trim();
+
+  try {
+    console.log('[forgot-password] Llamando SDK requestPasswordRecovery para:', cleanEmail);
+    await withTimeout(
+      sdk.auth.requestPasswordRecovery({ email: cleanEmail }),
+      SDK_TIMEOUT_MS,
+      'requestPasswordRecovery'
+    );
+    console.log('[forgot-password] SDK respondió exitosamente para:', cleanEmail);
+  } catch (err) {
+    if (err.message && err.message.startsWith('SDK timeout')) {
+      console.error('[forgot-password] TIMEOUT en SDK:', err.message);
+    } else if (err instanceof AuthServiceSdkError) {
+      console.error('[forgot-password] SDK error status=%d message=%s', err.status, err.message);
+    } else {
+      console.error('[forgot-password] Error inesperado:', err);
+    }
+    // No interrumpir — siempre devolver éxito por seguridad
+  }
+
+  console.log('[forgot-password] Respondiendo éxito al cliente para:', cleanEmail);
+  return res.json({
+    message: 'Si el correo está registrado, recibirás un enlace de recuperación.',
+  });
 });
 
 // ============================================================
 // GET /verify-token/:token
-// Verifica si un token de reset es válido
 // ============================================================
-router.get('/verify-token/:token', (req, res) => {
+router.get('/verify-token/:token', async (req, res) => {
   const { token } = req.params;
-  const data = resetTokens.get(token);
+  console.log('[verify-token] Verificando token (primeros 20 chars):', token?.substring(0, 20));
 
-  if (!data) {
-    return res.status(400).json({ valid: false, message: 'Token inválido o expirado.' });
+  try {
+    console.log('[verify-token] Llamando SDK validateRecoveryToken...');
+    const result = await withTimeout(
+      sdk.auth.validateRecoveryToken({ token }),
+      SDK_TIMEOUT_MS,
+      'validateRecoveryToken'
+    );
+    console.log('[verify-token] SDK respondió: valid=%s email=%s', result.valid, result.email);
+    return res.json({ valid: result.valid, email: result.email });
+  } catch (err) {
+    if (err.message && err.message.startsWith('SDK timeout')) {
+      console.error('[verify-token] TIMEOUT en SDK:', err.message);
+      return res.status(504).json({ valid: false, message: 'El servicio de autenticación no respondió. Intenta de nuevo.' });
+    }
+    if (err instanceof AuthServiceSdkError) {
+      console.error('[verify-token] SDK error status=%d message=%s', err.status, err.message);
+    } else {
+      console.error('[verify-token] Error inesperado:', err);
+    }
+    return res.json({ valid: false, message: 'Token inválido o expirado.' });
   }
-
-  if (Date.now() > data.expiresAt) {
-    resetTokens.delete(token);
-    return res.status(400).json({ valid: false, message: 'El enlace ha expirado. Solicita uno nuevo.' });
-  }
-
-  return res.json({ valid: true });
 });
 
 // ============================================================
 // POST /reset-password/:token
-// Establece nueva contraseña usando el token
 // ============================================================
 router.post('/reset-password/:token', async (req, res) => {
+  const { token } = req.params;
+  const { password } = req.body;
+  console.log('[reset-password] Solicitud recibida, token (primeros 20 chars):', token?.substring(0, 20));
+
+  if (!password || password.length < 6) {
+    console.warn('[reset-password] Contraseña muy corta');
+    return res.status(400).json({ message: 'La contraseña debe tener al menos 6 caracteres.' });
+  }
+
   try {
-    const { token } = req.params;
-    const { password } = req.body;
+    // Validar token
+    console.log('[reset-password] Validando token con SDK...');
+    const validation = await withTimeout(
+      sdk.auth.validateRecoveryToken({ token }),
+      SDK_TIMEOUT_MS,
+      'validateRecoveryToken'
+    );
+    console.log('[reset-password] Token válido=%s email=%s', validation.valid, validation.email);
 
-    // Validar contraseña
-    if (!password || password.length < 6) {
-      return res.status(400).json({
-        message: 'La contraseña debe tener al menos 6 caracteres.',
-      });
-    }
-
-    // Verificar token
-    const data = resetTokens.get(token);
-    if (!data) {
+    if (!validation.valid) {
       return res.status(400).json({ message: 'Token inválido o expirado.' });
     }
 
-    if (Date.now() > data.expiresAt) {
-      resetTokens.delete(token);
-      return res.status(400).json({ message: 'El enlace ha expirado. Solicita uno nuevo.' });
+    // Restablecer contraseña
+    console.log('[reset-password] Llamando SDK resetPassword...');
+    await withTimeout(
+      sdk.auth.resetPassword({ token, password }),
+      SDK_TIMEOUT_MS,
+      'resetPassword'
+    );
+    console.log('[reset-password] Contraseña restablecida en SDK para email:', validation.email);
+
+    // Sincronizar hash en MongoDB
+    if (validation.email) {
+      const user = await User.findOne({ email: validation.email });
+      if (user) {
+        user.password = await bcrypt.hash(password, 10);
+        await user.save();
+        console.log('[reset-password] Hash sincronizado en MongoDB para:', validation.email);
+      } else {
+        console.warn('[reset-password] Usuario no encontrado en MongoDB:', validation.email);
+      }
     }
-
-    // Buscar usuario y actualizar contraseña
-    const user = await User.findOne({ email: data.email });
-    if (!user) {
-      return res.status(400).json({ message: 'Usuario no encontrado.' });
-    }
-
-    const hashed = await bcrypt.hash(password, 10);
-    user.password = hashed;
-    await user.save();
-
-    // Eliminar token usado
-    resetTokens.delete(token);
 
     return res.json({ message: 'Contraseña actualizada exitosamente. Ya puedes iniciar sesión.' });
-  } catch (error) {
-    console.error('Error en reset-password:', error.message);
+  } catch (err) {
+    if (err.message && err.message.startsWith('SDK timeout')) {
+      console.error('[reset-password] TIMEOUT en SDK:', err.message);
+      return res.status(504).json({ message: 'El servicio de autenticación no respondió. Intenta de nuevo.' });
+    }
+    if (err instanceof AuthServiceSdkError) {
+      const message = err.status === 409
+        ? 'Este enlace ya fue usado. Solicita uno nuevo.'
+        : err.message || 'Token inválido o expirado.';
+      console.error('[reset-password] SDK error status=%d message=%s', err.status, err.message);
+      return res.status(err.status || 400).json({ message });
+    }
+    console.error('[reset-password] Error inesperado:', err);
     return res.status(500).json({ message: 'Error al restablecer la contraseña.' });
   }
 });

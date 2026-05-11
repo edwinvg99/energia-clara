@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { Lock, ArrowLeft, CheckCircle2, AlertTriangle, Loader2, XCircle } from 'lucide-react';
 import API_URL from '../api';
 
 function ResetPassword() {
-  const { token } = useParams();
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token');
   const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -17,11 +18,25 @@ function ResetPassword() {
   // Verificar token al montar
   useEffect(() => {
     const verifyToken = async () => {
+      console.log('[ResetPassword] Verificando token (primeros 20 chars):', token?.substring(0, 20));
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
       try {
-        const res = await fetch(`${API_URL}/api/password/verify-token/${token}`);
+        const res = await fetch(`${API_URL}/api/password/verify-token/${token}`, {
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        console.log('[ResetPassword] verify-token status:', res.status);
         const data = await res.json();
+        console.log('[ResetPassword] verify-token data:', data);
         setTokenValid(data.valid === true);
-      } catch {
+      } catch (err) {
+        clearTimeout(timeoutId);
+        if (err.name === 'AbortError') {
+          console.error('[ResetPassword] Timeout verificando token');
+        } else {
+          console.error('[ResetPassword] Error verificando token:', err);
+        }
         setTokenValid(false);
       } finally {
         setVerifying(false);
@@ -45,14 +60,22 @@ function ResetPassword() {
 
     setLoading(true);
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s — resetPassword hace 2 llamadas al SDK
+
     try {
+      console.log('[ResetPassword] Enviando reset-password para token (primeros 20 chars):', token?.substring(0, 20));
       const res = await fetch(`${API_URL}/api/password/reset-password/${token}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password }),
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
+      console.log('[ResetPassword] reset-password status:', res.status);
       const data = await res.json();
+      console.log('[ResetPassword] reset-password data:', data);
 
       if (res.ok) {
         setSuccess(true);
@@ -60,8 +83,15 @@ function ResetPassword() {
       } else {
         setError(data.message || 'Error al restablecer la contraseña.');
       }
-    } catch {
-      setError('Error de conexión con el servidor.');
+    } catch (err) {
+      clearTimeout(timeoutId);
+      if (err.name === 'AbortError') {
+        console.error('[ResetPassword] Timeout al restablecer contraseña');
+        setError('El servidor tardó demasiado en responder. Intenta de nuevo.');
+      } else {
+        console.error('[ResetPassword] Error de red:', err);
+        setError('Error de conexión con el servidor.');
+      }
     } finally {
       setLoading(false);
     }

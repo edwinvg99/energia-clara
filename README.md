@@ -2,7 +2,7 @@
 
 Plataforma web educativa e informativa sobre el mercado de energía eléctrica en Colombia, desarrollada como proyecto de tesis para el Tecnológico de Antioquia - Institución Universitaria.
 
-🔗 **Demo en producción:** [energia-clara-client.up.railway.app](https://energia-clara-client.up.railway.app)
+🔗 **Demo en producción:** [energiaclara.up.railway.app](https://energiaclara.up.railway.app)
 
 ---
 

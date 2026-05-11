@@ -87,8 +87,8 @@ function Login() {
       const data = await res.json();
       
       if (res.ok) {
-        sessionStorage.setItem('token', data.token);
-        localStorage.setItem('token', data.token);
+        localStorage.setItem('accessToken', data.accessToken);
+        localStorage.setItem('refreshToken', data.refreshToken);
         if (data.user) loginUser(data.user);
         navigate("/educativo");
       } else {

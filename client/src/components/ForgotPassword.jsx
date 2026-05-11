@@ -21,17 +21,24 @@ function ForgotPassword() {
     setError('');
     setDevResetURL('');
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout
+
     try {
+      console.log('[ForgotPassword] Enviando solicitud a /api/password/forgot-password para:', email.trim());
       const res = await fetch(`${API_URL}/api/password/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim() }),
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
+      console.log('[ForgotPassword] Respuesta recibida, status:', res.status);
       const data = await res.json();
+      console.log('[ForgotPassword] Datos:', data);
 
       if (res.ok) {
-        // Guardar enlace de desarrollo si existe (cuando SMTP falla)
         if (data.devResetURL) {
           setDevResetURL(data.devResetURL);
         }
@@ -39,8 +46,15 @@ function ForgotPassword() {
       } else {
         setError(data.message || 'Error al procesar la solicitud.');
       }
-    } catch {
-      setError('Error de conexión con el servidor.');
+    } catch (err) {
+      clearTimeout(timeoutId);
+      if (err.name === 'AbortError') {
+        console.error('[ForgotPassword] Timeout: el servidor no respondió en 20s');
+        setError('El servidor tardó demasiado en responder. Intenta de nuevo.');
+      } else {
+        console.error('[ForgotPassword] Error de red:', err);
+        setError('Error de conexión con el servidor.');
+      }
     } finally {
       setLoading(false);
     }
