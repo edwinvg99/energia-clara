@@ -215,4 +215,31 @@ router.get('/user/:sdkId', async (req, res) => {
   }
 });
 
+router.get('/me', async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'Token requerido' });
+  }
+  const accessToken = authHeader.split(' ')[1];
+  try {
+    const result = await sdk.auth.validate({ accessToken });
+    const sdkUserId = result.user?.id;
+    const user = await User.findOne({ sdkUserId });
+    if (!user) return res.status(404).json({ message: 'Usuario no encontrado en el sistema' });
+    res.json({
+      id: user._id,
+      nombre: user.nombre,
+      apellido: user.apellido,
+      email: user.email,
+      universidad: user.universidad,
+      ciudad: user.ciudad,
+    });
+  } catch (err) {
+    if (err instanceof AuthServiceSdkError) {
+      return res.status(err.status || 401).json({ message: err.message || 'Token inválido' });
+    }
+    res.status(500).json({ message: 'Error en el servidor' });
+  }
+});
+
 module.exports = router;

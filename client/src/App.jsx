@@ -18,6 +18,7 @@ import Noticias from './components/Noticias';
 import DocumentosCREG from './components/DocumentosCREG';
 import SIMEM from './components/SIMEM';
 import Indicadores from './components/Indicadores';
+import AuthCallback from './components/AuthCallback';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useContext(UserContext);
@@ -45,6 +46,7 @@ function App() {
             <ModuloEducativo />
           </ProtectedRoute>
         } />
+        <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
