@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   BookOpen,
@@ -6,9 +7,41 @@ import {
   Link2,
   ClipboardList,
 } from "lucide-react";
-import { modulosEducativos } from "../data/modulosData";
+import API_URL from "../api";
+import { getAuthHeaders } from "../services/authService";
 
 const Educativo = () => {
+  const [modulos, setModulos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetch(`${API_URL}/api/educativo/modulos`, { headers: getAuthHeaders() })
+      .then((res) => {
+        if (!res.ok) throw new Error('Error al cargar los módulos');
+        return res.json();
+      })
+      .then((data) => setModulos(data))
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-gray-600">Cargando módulos...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-red-600">{error}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* ── DARK HERO ── */}
@@ -30,7 +63,7 @@ const Educativo = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Grid de Módulos */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-          {modulosEducativos.map((modulo) => (
+          {modulos.map((modulo) => (
             <Link
               key={modulo.id}
               to={`/educativo/${modulo.id}`}
@@ -128,3 +161,4 @@ const Educativo = () => {
 };
 
 export default Educativo;
+

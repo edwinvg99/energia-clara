@@ -1,32 +1,63 @@
-import { useState, useContext } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { UserContext } from '../context/UserContextDef';
 import jsPDF from 'jspdf';
-import { modulosEducativos } from '../data/modulosData';
 import logoTdea from '../assets/logo-tdea.png';
+import API_URL from '../api';
+import { getAuthHeaders } from '../services/authService';
 
 function ModuloEducativo() {
   const { moduloId } = useParams();
-  const modulo = modulosEducativos.find(m => m.id === moduloId);
-  
+  const [modulo, setModulo] = useState(null);
+  const [loadingModulo, setLoadingModulo] = useState(true);
+  const [errorModulo, setErrorModulo] = useState(null);
+
   const [mostrarExamen, setMostrarExamen] = useState(false);
   const [respuestas, setRespuestas] = useState({});
   const [resultados, setResultados] = useState(null);
   const { user } = useContext(UserContext);
   const navigate = useNavigate();
-  
-  if (!modulo) {
+
+  useEffect(() => {
+    fetch(`${API_URL}/api/educativo/modulos/${moduloId}`, { headers: getAuthHeaders() })
+      .then((res) => {
+        if (res.status === 404) throw new Error('not_found');
+        if (!res.ok) throw new Error('error');
+        return res.json();
+      })
+      .then((data) => setModulo(data))
+      .catch((err) => setErrorModulo(err.message))
+      .finally(() => setLoadingModulo(false));
+  }, [moduloId]);
+
+  if (loadingModulo) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-gray-600">Cargando módulo...</p>
+      </div>
+    );
+  }
+
+  if (errorModulo === 'not_found' || !modulo) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center ">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Módulo no encontrado</h2>
-          <button 
+          <button
             onClick={() => navigate('/educativo')}
             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
           >
             Volver a módulos
           </button>
         </div>
+      </div>
+    );
+  }
+
+  if (errorModulo) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-red-600">Error al cargar el módulo. Intenta de nuevo.</p>
       </div>
     );
   }

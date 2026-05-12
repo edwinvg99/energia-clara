@@ -12,6 +12,9 @@ const noticiasRoutes = require('./routes/noticias');
 const cregRoutes = require('./routes/creg');
 const simemRoutes = require('./routes/simem');
 const sinergoxRoutes = require('./routes/sinergox');
+const educativoRoutes = require('./routes/educativo');
+const Modulo = require('./models/Modulo');
+const modulosData = require('./data/modulosData');
 
 // Override DNS — public resolvers first (fast for Railway, simem.co, etc.),
 // Colombian ISP DNS as fallback for domains that need local resolution.
@@ -85,7 +88,14 @@ app.use(express.json({ limit: '1mb' })); // Limitar tamaño del body
 // BASE DE DATOS
 // ============================================================
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB Atlas conectado'))
+  .then(async () => {
+    console.log('MongoDB Atlas conectado');
+    const count = await Modulo.countDocuments();
+    if (count === 0) {
+      await Modulo.insertMany(modulosData);
+      console.log(`Seed: ${modulosData.length} módulos educativos insertados`);
+    }
+  })
   .catch(err => console.error(err));
 
 // ============================================================
@@ -98,6 +108,7 @@ app.use('/api/noticias', noticiasRoutes);
 app.use('/api/creg', cregRoutes);
 app.use('/api/simem', simemRoutes);
 app.use('/api/sinergox', sinergoxRoutes);
+app.use('/api/educativo', educativoRoutes);
 
 // ============================================================
 // HEALTH CHECK
