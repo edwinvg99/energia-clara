@@ -1,10 +1,7 @@
 const express = require('express');
 const Modulo = require('../models/Modulo');
-const authMiddleware = require('../middleware/auth');
 
 const router = express.Router();
-
-router.use(authMiddleware);
 
 router.get('/modulos', async (req, res) => {
   try {
