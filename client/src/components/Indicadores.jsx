@@ -422,7 +422,7 @@ export default function Indicadores() {
               </div>
               <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3">
                 Indicadores del{" "}
-                <span className="text-transparent bg-clip-text bg-linear-to-r from-violet-400 to-sky-400">
+                <span className="text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-sky-400">
                   Mercado Eléctrico
                 </span>
               </h1>

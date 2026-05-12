@@ -2,21 +2,52 @@ import { useState, useEffect, useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { UserContext } from '../context/UserContextDef';
 import jsPDF from 'jspdf';
-import logoTdea from '../assets/logo-tdea.png';
+import tdeaLogoPng from '../assets/TDEA LOGO FINAL.png';
 import API_URL from '../api';
 import { getAuthHeaders } from '../services/authService';
+import {
+  ArrowLeft, BookOpen, CheckCircle2, ClipboardList, ExternalLink,
+  FileText, Play, Link2, ChevronDown, ChevronUp, GraduationCap,
+  Trophy, RotateCcw, Download, Leaf, Zap, Share2, Users2, Globe, Sun,
+} from 'lucide-react';
+
+const C = {
+  hex:     '#7DD3FC',
+  glow:    'rgba(125,211,252,0.2)',
+  iconBg:  'bg-sky-400/10',
+  iconText:'text-sky-300',
+};
+
+const MODULE_ICONS = [Leaf, Zap, Share2, Users2, Globe, Sun, BookOpen, GraduationCap];
+
+function getRecursoIcon(tipo) {
+  const t = (tipo || '').toLowerCase();
+  if (t.includes('video') || t.includes('youtube')) return Play;
+  if (t.includes('pdf') || t.includes('documento'))  return FileText;
+  if (t.includes('art') || t.includes('lectura'))    return BookOpen;
+  return ExternalLink;
+}
 
 function ModuloEducativo() {
   const { moduloId } = useParams();
-  const [modulo, setModulo] = useState(null);
-  const [loadingModulo, setLoadingModulo] = useState(true);
-  const [errorModulo, setErrorModulo] = useState(null);
-
+  const [modulo, setModulo]           = useState(null);
+  const [loadingModulo, setLoading]   = useState(true);
+  const [errorModulo, setError]       = useState(null);
   const [mostrarExamen, setMostrarExamen] = useState(false);
-  const [respuestas, setRespuestas] = useState({});
-  const [resultados, setResultados] = useState(null);
+  const [respuestas, setRespuestas]   = useState({});
+  const [resultados, setResultados]   = useState(null);
+  const [recursosOpen, setRecursosOpen] = useState(false);
+  const [previewUrl, setPreviewUrl]   = useState(null);
+  const [previewFilename, setPreviewFilename] = useState('');
   const { user } = useContext(UserContext);
   const navigate = useNavigate();
+
+  // Derive a stable icon from module list index via id
+  const iconIdx = modulo
+    ? ['transicion-energetica','autogeneracion','generacion-distribuida','comunidades-energeticas']
+        .indexOf(modulo.id)
+    : 0;
+  const ModIcon = MODULE_ICONS[Math.max(iconIdx, 0) % MODULE_ICONS.length];
 
   useEffect(() => {
     fetch(`${API_URL}/api/educativo/modulos/${moduloId}`, { headers: getAuthHeaders() })
@@ -26,26 +57,31 @@ function ModuloEducativo() {
         return res.json();
       })
       .then((data) => setModulo(data))
-      .catch((err) => setErrorModulo(err.message))
-      .finally(() => setLoadingModulo(false));
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
   }, [moduloId]);
 
+  /* ── Loading ── */
   if (loadingModulo) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-600">Cargando módulo...</p>
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-10 h-10 border-2 border-sky-400 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-slate-400 text-sm">Cargando módulo...</p>
+        </div>
       </div>
     );
   }
 
+  /* ── Not found ── */
   if (errorModulo === 'not_found' || !modulo) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center ">
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Módulo no encontrado</h2>
+          <h2 className="text-xl font-bold text-white mb-4">Módulo no encontrado</h2>
           <button
             onClick={() => navigate('/educativo')}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+            className="bg-sky-500 hover:bg-sky-600 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition cursor-pointer"
           >
             Volver a módulos
           </button>
@@ -54,508 +90,496 @@ function ModuloEducativo() {
     );
   }
 
+  /* ── Error ── */
   if (errorModulo) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-red-600">Error al cargar el módulo. Intenta de nuevo.</p>
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <p className="text-red-400 text-sm">Error al cargar el módulo. Intenta de nuevo.</p>
       </div>
     );
   }
 
-  const handleRespuesta = (preguntaIndex, opcion) => {
-    setRespuestas({ ...respuestas, [preguntaIndex]: opcion });
-  };
+  const handleRespuesta = (i, opcion) => setRespuestas({ ...respuestas, [i]: opcion });
 
   const evaluarExamen = () => {
     let correctas = 0;
-    modulo.examen.forEach((pregunta, index) => {
-      if (respuestas[index] === pregunta.correcta) {
-        correctas++;
-      }
-    });
+    modulo.examen.forEach((p, i) => { if (respuestas[i] === p.correcta) correctas++; });
     setResultados({ correctas, total: modulo.examen.length });
   };
 
+  /* ── Certificate PDF — dark premium ── */
   const generarCertificado = () => {
-    // Formato horizontal (landscape)
-    const doc = new jsPDF({
-      orientation: 'landscape',
-      unit: 'mm',
-      format: 'a4'
-    });
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    const W = 297;
+    const H = 210;
 
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
+    // Base dark color [r, g, b] — deep navy, matches SVG texture #010518
+    const BG = [1, 5, 24];
 
-    // Fondo degradado simulado con rectángulos
-    doc.setFillColor(250, 251, 252); // Fondo principal gris muy claro
-    doc.rect(0, 0, pageWidth, pageHeight, 'F');
-    
-    // Borde decorativo doble
-    doc.setDrawColor(16, 185, 129); // Verde emerald
-    doc.setLineWidth(2);
-    doc.rect(8, 8, pageWidth - 16, pageHeight - 16);
-    
-    doc.setDrawColor(203, 213, 225); // Gris claro
-    doc.setLineWidth(0.5);
-    doc.rect(12, 12, pageWidth - 24, pageHeight - 24);
-
-    // Barra superior decorativa
-    doc.setFillColor(16, 185, 129);
-    doc.rect(0, 0, pageWidth, 25, 'F');
-    
-    // Barra inferior decorativa
-    doc.setFillColor(15, 23, 42); // Slate 900
-    doc.rect(0, pageHeight - 15, pageWidth, 15, 'F');
-
-    // Cargar y agregar logo
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.src = logoTdea;
-    
-    img.onload = function() {
-      try {
-        // Logo en la esquina superior izquierda (sobre la barra verde)
-        // Ajustamos proporción para que no se vea estirado
-        doc.addImage(img, 'PNG', 15, 7, 35, 12);
-      } catch (error) {
-        console.warn('Error al cargar logo:', error);
-      }
-      
-      // Titulo "CERTIFICADO" (sin tildes para evitar caracteres raros)
-      doc.setFontSize(38);
-      doc.setTextColor(16, 185, 129);
-      doc.setFont('helvetica', 'bold');
-      doc.text('CERTIFICADO DE FINALIZACION', pageWidth / 2, 45, { align: 'center' });
-      
-      // Linea decorativa debajo del titulo
-      doc.setDrawColor(16, 185, 129);
-      doc.setLineWidth(1);
-      doc.line(60, 50, pageWidth - 60, 50);
-      
-      // Ornamentos decorativos
-      doc.setFillColor(16, 185, 129);
-      doc.circle(55, 50, 2, 'F');
-      doc.circle(pageWidth - 55, 50, 2, 'F');
-
-      // Texto "Se certifica que"
-      doc.setFontSize(14);
-      doc.setTextColor(71, 85, 105);
-      doc.setFont('helvetica', 'normal');
-      doc.text('Se certifica que', pageWidth / 2, 65, { align: 'center' });
-
-      // Nombre del estudiante con fondo
-      doc.setFillColor(240, 253, 244); // Verde muy claro
-      doc.roundedRect(pageWidth / 2 - 70, 70, 140, 15, 3, 3, 'F');
-      
-      doc.setFontSize(26);
-      doc.setTextColor(15, 23, 42);
-      doc.setFont('helvetica', 'bold');
-      const nombreCompleto = `${user.nombre} ${user.apellido}`.toUpperCase();
-      doc.text(nombreCompleto, pageWidth / 2, 80, { align: 'center' });
-
-      // Texto descriptivo (sin tildes)
-      doc.setFontSize(13);
-      doc.setTextColor(71, 85, 105);
-      doc.setFont('helvetica', 'normal');
-      doc.text('ha completado satisfactoriamente el modulo educativo', pageWidth / 2, 95, { align: 'center' });
-
-      // Nombre del modulo con destaque
-      doc.setFontSize(20);
-      doc.setTextColor(16, 185, 129);
-      doc.setFont('helvetica', 'bold');
-      
-      // Dividir texto largo en multiples lineas si es necesario
-      const tituloModulo = modulo.titulo.toUpperCase();
-      const maxWidth = pageWidth - 80;
-      const lines = doc.splitTextToSize(tituloModulo, maxWidth);
-      
-      if (lines.length === 1) {
-        doc.text(lines[0], pageWidth / 2, 108, { align: 'center' });
-      } else {
-        doc.text(lines[0], pageWidth / 2, 105, { align: 'center' });
-        doc.text(lines[1], pageWidth / 2, 112, { align: 'center' });
-      }
-
-      // Calificacion con badge
-      const yCalificacion = lines.length === 1 ? 118 : 125;
-      doc.setFillColor(219, 234, 254); // Azul claro
-      doc.roundedRect(pageWidth / 2 - 45, yCalificacion, 90, 10, 2, 2, 'F');
-      
-      doc.setFontSize(11);
-      doc.setTextColor(30, 64, 175);
-      doc.setFont('helvetica', 'bold');
-      const porcentaje = Math.round((resultados.correctas / resultados.total) * 100);
-      doc.text(`Calificacion: ${resultados.correctas}/${resultados.total} (${porcentaje}%)`, 
-                pageWidth / 2, yCalificacion + 6.5, { align: 'center' });
-
-      // Fecha y codigo de verificacion
-      const fecha = new Date().toLocaleDateString('es-CO', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
+    const loadImg = (src) =>
+      new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload  = () => resolve(img);
+        img.onerror = () => reject();
+        img.src = src;
       });
-      
-      const codigoVerificacion = `EC-${Date.now().toString(36).toUpperCase()}-${user.nombre.substring(0, 2).toUpperCase()}`;
-      
-      const yFecha = lines.length === 1 ? 140 : 147;
-      
-      // Fecha
-      doc.setFontSize(10);
-      doc.setTextColor(100, 116, 139);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Fecha de emision: ${fecha}`, pageWidth / 2 - 60, yFecha, { align: 'left' });
-      
-      // Codigo de verificacion
-      doc.text(`Codigo: ${codigoVerificacion}`, pageWidth / 2 + 10, yFecha, { align: 'left' });
 
-      // Firma digital (decorativa)
-      const yFirma = lines.length === 1 ? 155 : 162;
-      doc.setLineWidth(0.5);
-      doc.setDrawColor(100, 116, 139);
-      doc.line(pageWidth / 2 - 40, yFirma, pageWidth / 2 + 40, yFirma);
-      
-      doc.setFontSize(9);
-      doc.setTextColor(71, 85, 105);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Plataforma Energia Clara', pageWidth / 2, yFirma + 5, { align: 'center' });
-      doc.setFont('helvetica', 'normal');
-      doc.text('Tecnologico de Antioquia', pageWidth / 2, yFirma + 10, { align: 'center' });
+    const filename = `Certificado_${modulo.id}_${user.nombre}_${user.apellido}.pdf`;
 
-      // Footer en barra oscura
-      doc.setFontSize(8);
+    const buildAndPreview = (logoImg) => {
+      // ── Background ──
+      doc.setFillColor(BG[0], BG[1], BG[2]);
+      doc.rect(0, 0, W, H, 'F');
+
+      // ── Subtle corner glows for depth (sky blue, off-page centers) ──
+      const blendToward = (fg, t) =>
+        fg.map((c, i) => Math.round(BG[i] * (1 - t) + c * t));
+      const drawSoftGlow = (cx, cy, rx, ry, fg, maxT = 0.35) => {
+        const N = 50;
+        for (let i = 0; i < N; i++) {
+          const s = 1.0 - (i / (N - 1)) * 0.96;
+          const t = 0.01 + (i / (N - 1)) * (maxT - 0.01);
+          const [R, G, B] = blendToward(fg, t);
+          doc.setFillColor(R, G, B);
+          doc.ellipse(cx, cy, rx * s, ry * s, 'F');
+        }
+      };
+      // Two diagonal sky-blue glows with off-page centers
+      drawSoftGlow(W + 30, -30, 260, 220, [0, 174, 255], 0.32);
+      drawSoftGlow(-30, H + 30, 260, 220, [0, 174, 255], 0.32);
+
+      // ── Texture: grid of tiny blue diagonal slashes (overlays glows) ──
+      // doc.setDrawColor(0, 174, 255); // #00aeff
+      // doc.setLineWidth(0.1);
+      // const SP = 6.5;   // grid spacing in mm
+      // const SZ = 0.7;   // slash length in mm
+      // for (let y = SP; y < H; y += SP) {
+      //   for (let x = SP; x < W; x += SP) {
+      //     // "\" diagonal slash centered at (x,y)
+      //     doc.line(x - SZ / 2, y - SZ / 2, x + SZ / 2, y + SZ / 2);
+      //   }
+      // }
+
+      // ── Vertical centering ──
+      // Content block spans ~157mm; offset pushes it to vertical center of 210mm page
+      const YO = 18; // vertical offset (mm) to center all content
+
+      // ── Logo (PNG with transparency) ──
+      if (logoImg) {
+        const LW = 100;
+        const LH = 35;
+        doc.addImage(logoImg, 'PNG', (W - LW) / 2, YO - 10, LW, LH);
+      }
+
+      // Decorative line below logo
+      doc.setDrawColor(56, 189, 248);
+      doc.setLineWidth(0.3);
+      doc.line(W / 2 - 55, YO + 27, W / 2 + 55, YO + 27);
+
+      // ── "Hace constar que:" ──
+      doc.setFontSize(14);
+      doc.setTextColor(148, 180, 215);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Hace constar que:', W / 2, YO + 54, { align: 'center' });
+
+      // ── Nombre del estudiante ──
+      doc.setFontSize(34);
       doc.setTextColor(255, 255, 255);
-      doc.text('Plataforma Educativa de Energias Renovables | www.tdea.edu.co', pageWidth / 2, pageHeight - 8, { align: 'center' });
-      doc.text('Este certificado verifica la completacion del modulo educativo en la plataforma Energia Clara', pageWidth / 2, pageHeight - 4, { align: 'center' });
+      doc.setFont('helvetica', 'bold');
+      const nombre = `${user.nombre} ${user.apellido}`.toUpperCase();
+      doc.text(nombre, W / 2, YO + 70, { align: 'center' });
 
-      // Descargar
-      doc.save(`Certificado_${modulo.id}_${user.nombre}_${user.apellido}.pdf`);
-    };
+      // Separator line (sky-blue)
+      doc.setDrawColor(56, 189, 248);
+      doc.setLineWidth(0.5);
+      doc.line(W / 2 - 78, YO + 76, W / 2 + 78, YO + 76);
 
-    img.onerror = function() {
-      // Si falla la carga de imagen, generar sin logo
-      console.warn('No se pudo cargar el logo, generando certificado sin imagen');
-      
-      // Genera el certificado sin logo, con texto alternativo
+      // ── "Realizó el curso:" ──
+      doc.setFontSize(14);
+      doc.setTextColor(148, 180, 215);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Realizó el curso:', W / 2, YO + 92, { align: 'center' });
+
+      // ── Título del módulo ──
+      doc.setFontSize(26);
+      doc.setTextColor(52, 211, 153); // emerald-400
+      doc.setFont('helvetica', 'bold');
+      const tituloLines = doc.splitTextToSize(modulo.titulo, W - 80);
+      doc.text(tituloLines, W / 2, YO + 106, { align: 'center' });
+
+      // ── Fecha ──
+      const fecha = new Date().toLocaleDateString('es-CO', {
+        day: 'numeric', month: 'long', year: 'numeric',
+      });
+      const fechaY = YO + 106 + tituloLines.length * 10 + 14;
       doc.setFontSize(12);
-      doc.setTextColor(255, 255, 255);
-      doc.setFont('helvetica', 'bold');
-      doc.text('TDEA', 25, 15);
-      
-      // Continua con el mismo contenido que el onload
-      doc.setFontSize(38);
-      doc.setTextColor(16, 185, 129);
-      doc.setFont('helvetica', 'bold');
-      doc.text('CERTIFICADO DE FINALIZACION', pageWidth / 2, 45, { align: 'center' });
-      
-      doc.setDrawColor(16, 185, 129);
-      doc.setLineWidth(1);
-      doc.line(60, 50, pageWidth - 60, 50);
-      
-      doc.setFillColor(16, 185, 129);
-      doc.circle(55, 50, 2, 'F');
-      doc.circle(pageWidth - 55, 50, 2, 'F');
-
-      doc.setFontSize(14);
-      doc.setTextColor(71, 85, 105);
+      doc.setTextColor(148, 163, 184);
       doc.setFont('helvetica', 'normal');
-      doc.text('Se certifica que', pageWidth / 2, 65, { align: 'center' });
+      doc.text(`Realizado el ${fecha}`, W / 2, fechaY, { align: 'center' });
 
-      doc.setFillColor(240, 253, 244);
-      doc.roundedRect(pageWidth / 2 - 70, 70, 140, 15, 3, 3, 'F');
-      
-      doc.setFontSize(26);
-      doc.setTextColor(15, 23, 42);
-      doc.setFont('helvetica', 'bold');
-      const nombreCompleto = `${user.nombre} ${user.apellido}`.toUpperCase();
-      doc.text(nombreCompleto, pageWidth / 2, 80, { align: 'center' });
-
-      doc.setFontSize(13);
-      doc.setTextColor(71, 85, 105);
-      doc.setFont('helvetica', 'normal');
-      doc.text('ha completado satisfactoriamente el modulo educativo', pageWidth / 2, 95, { align: 'center' });
-
-      doc.setFontSize(20);
-      doc.setTextColor(16, 185, 129);
-      doc.setFont('helvetica', 'bold');
-      
-      const tituloModulo = modulo.titulo.toUpperCase();
-      const maxWidth = pageWidth - 80;
-      const lines = doc.splitTextToSize(tituloModulo, maxWidth);
-      
-      if (lines.length === 1) {
-        doc.text(lines[0], pageWidth / 2, 108, { align: 'center' });
-      } else {
-        doc.text(lines[0], pageWidth / 2, 105, { align: 'center' });
-        doc.text(lines[1], pageWidth / 2, 112, { align: 'center' });
-      }
-
-      const yCalificacion = lines.length === 1 ? 118 : 125;
-      doc.setFillColor(219, 234, 254);
-      doc.roundedRect(pageWidth / 2 - 45, yCalificacion, 90, 10, 2, 2, 'F');
-      
-      doc.setFontSize(11);
-      doc.setTextColor(30, 64, 175);
-      doc.setFont('helvetica', 'bold');
-      const porcentaje = Math.round((resultados.correctas / resultados.total) * 100);
-      doc.text(`Calificacion: ${resultados.correctas}/${resultados.total} (${porcentaje}%)`, 
-                pageWidth / 2, yCalificacion + 6.5, { align: 'center' });
-
-      const fecha = new Date().toLocaleDateString('es-CO', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      });
-      
-      const codigoVerificacion = `EC-${Date.now().toString(36).toUpperCase()}-${user.nombre.substring(0, 2).toUpperCase()}`;
-      
-      const yFecha = lines.length === 1 ? 140 : 147;
-      
-      doc.setFontSize(10);
-      doc.setTextColor(100, 116, 139);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Fecha de emision: ${fecha}`, pageWidth / 2 - 60, yFecha, { align: 'left' });
-      doc.text(`Codigo: ${codigoVerificacion}`, pageWidth / 2 + 10, yFecha, { align: 'left' });
-
-      const yFirma = lines.length === 1 ? 155 : 162;
-      doc.setLineWidth(0.5);
-      doc.setDrawColor(100, 116, 139);
-      doc.line(pageWidth / 2 - 40, yFirma, pageWidth / 2 + 40, yFirma);
-      
+      // ── URL de la plataforma ──
       doc.setFontSize(9);
-      doc.setTextColor(71, 85, 105);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Plataforma Energia Clara', pageWidth / 2, yFirma + 5, { align: 'center' });
-      doc.setFont('helvetica', 'normal');
-      doc.text('Tecnologico de Antioquia', pageWidth / 2, yFirma + 10, { align: 'center' });
+      doc.setTextColor(56, 189, 248);
+      doc.text('https://energiaclara.up.railway.app/', W / 2, fechaY + 9, { align: 'center' });
 
+      // ── Código discreto ──
+      const codigo = `EC-${Date.now().toString(36).toUpperCase()}-${user.nombre.substring(0, 2).toUpperCase()}`;
       doc.setFontSize(8);
-      doc.setTextColor(255, 255, 255);
-      doc.text('Plataforma Educativa de Energias Renovables | www.tdea.edu.co', pageWidth / 2, pageHeight - 8, { align: 'center' });
-      doc.text('Este certificado verifica la completacion del modulo educativo en la plataforma Energia Clara', pageWidth / 2, pageHeight - 4, { align: 'center' });
+      doc.setTextColor(71, 85, 105);
+      doc.text(`Código: ${codigo}`, W / 2, fechaY + 17, { align: 'center' });
 
-      doc.save(`Certificado_${modulo.id}_${user.nombre}_${user.apellido}.pdf`);
+      // Blob URL for preview modal
+      const blob = doc.output('blob');
+      const url  = URL.createObjectURL(blob);
+      setPreviewFilename(filename);
+      setPreviewUrl(url);
     };
+
+    loadImg(tdeaLogoPng)
+      .then((logoImg) => buildAndPreview(logoImg))
+      .catch(() => buildAndPreview(null));
   };
 
+  const descargarCertificado = () => {
+    const a = document.createElement('a');
+    a.href = previewUrl;
+    a.download = previewFilename;
+    a.click();
+    URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(null);
+  };
+
+  /* ════════════════════════════════════════════
+     VISTA: Contenido del módulo
+  ════════════════════════════════════════════ */
   if (!mostrarExamen) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-slate-50 to-emerald-50 py-12 px-4 ">
-        <div className="max-w-4xl mx-auto">
-          {/* Header */}
-          <button
-            onClick={() => navigate('/educativo')}
-            className="mb-6 flex items-center gap-2 text-emerald-600 hover:text-emerald-700 transition-colors"
-          >
-            <span>←</span> Volver a módulos
-          </button>
-
-          <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-            {/* Banner del módulo */}
-            <div className={`${modulo.color} p-8 text-white`}>
-              <div className="flex items-center gap-3 mb-4">
-                <span className="text-4xl">{modulo.icono}</span>
-                <h1 className="text-3xl font-bold">{modulo.titulo}</h1>
+      <div className="min-h-screen bg-slate-950">
+        {/* Hero */}
+        <div className="relative overflow-hidden bg-slate-950 border-b border-slate-800/80">
+          <div
+            className="absolute inset-0 opacity-[0.03]"
+            style={{ backgroundImage: 'linear-gradient(rgba(148,163,184,1) 1px,transparent 1px),linear-gradient(90deg,rgba(148,163,184,1) 1px,transparent 1px)', backgroundSize: '40px 40px' }}
+          />
+          <div className="absolute -top-20 right-10 w-72 h-72 bg-emerald-500/8 rounded-full blur-3xl pointer-events-none" />
+          <div className="relative max-w-4xl mx-auto px-4 sm:px-6 py-10">
+            <button
+              onClick={() => navigate('/educativo')}
+              className="mb-6 flex items-center gap-2 text-slate-400 hover:text-sky-300 text-sm font-medium transition-colors cursor-pointer"
+            >
+              <ArrowLeft className="w-4 h-4" /> Volver a módulos
+            </button>
+            <div className="flex items-start gap-4">
+              <div className={`${C.iconBg} w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0`}>
+                <ModIcon className={`w-7 h-7 ${C.iconText}`} />
               </div>
-              <p className="text-lg opacity-90">{modulo.descripcion}</p>
+              <div>
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 mb-2">
+                  <GraduationCap className="h-3 w-3" /> Módulo educativo
+                </span>
+                <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight">{modulo.titulo}</h1>
+                <p className="text-slate-400 text-sm mt-1 max-w-xl leading-relaxed">{modulo.descripcion}</p>
+              </div>
             </div>
+          </div>
+        </div>
 
-            {/* Contenido educativo */}
-            <div className="p-8">
-              {modulo.contenido.map((seccion, index) => (
-                <div key={index} className="mb-8">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                    {seccion.titulo}
-                  </h2>
-                  <div className="prose max-w-none">
-                    {seccion.parrafos.map((parrafo, idx) => (
-                      <p key={idx} className="text-gray-700 mb-4 leading-relaxed">
-                        {parrafo}
-                      </p>
-                    ))}
-                  </div>
-                  
-                  {seccion.puntos && (
-                    <ul className="mt-4 space-y-2">
-                      {seccion.puntos.map((punto, idx) => (
-                        <li key={idx} className="flex items-start gap-3">
-                          <span className="text-emerald-500 mt-1">✓</span>
-                          <span className="text-gray-700">{punto}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 space-y-6">
+
+          {/* Secciones de contenido */}
+          {(modulo.contenido || []).map((seccion, index) => (
+            <div key={index} className="bg-slate-900 rounded-2xl border border-slate-700/50 overflow-hidden">
+              <div style={{ height: '3px', background: C.hex, boxShadow: `0 0 10px ${C.glow}` }} />
+              <div className="p-6">
+                <h2 className="text-lg font-bold text-white mb-4">{seccion.titulo}</h2>
+                <div className="space-y-3">
+                  {(seccion.parrafos || []).map((p, i) => (
+                    <p key={i} className="text-slate-400 text-sm leading-relaxed">{p}</p>
+                  ))}
                 </div>
-              ))}
+                {seccion.puntos && seccion.puntos.length > 0 && (
+                  <ul className="mt-4 space-y-2">
+                    {seccion.puntos.map((punto, i) => (
+                      <li key={i} className="flex items-start gap-2.5">
+                        <CheckCircle2 className="w-4 h-4 text-sky-300 flex-shrink-0 mt-0.5" />
+                        <span className="text-slate-300 text-sm leading-relaxed">{punto}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+          ))}
 
-              {/* Recursos adicionales */}
-              {modulo.recursos && (
-                <div className="mt-8 bg-emerald-50 rounded-xl p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">
-                    📚 Recursos Adicionales
-                  </h3>
-                  <div className="space-y-3">
-                    {modulo.recursos.map((recurso, index) => (
+          {/* Recursos — acordeón */}
+          {modulo.recursos && modulo.recursos.length > 0 && (
+            <div className="bg-slate-900 rounded-2xl border border-slate-700/50 overflow-hidden">
+              <div style={{ height: '3px', background: C.hex, boxShadow: `0 0 10px ${C.glow}` }} />
+              <button
+                onClick={() => setRecursosOpen(!recursosOpen)}
+                className="w-full px-6 py-4 flex items-center justify-between cursor-pointer hover:bg-slate-800/50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`${C.iconBg} w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0`}>
+                    <Link2 className={`w-4 h-4 ${C.iconText}`} />
+                  </div>
+                  <span className="font-bold text-white text-base">Recursos Adicionales</span>
+                  <span className="text-xs text-slate-500 font-medium hidden sm:inline">
+                    {modulo.recursos.length} {modulo.recursos.length === 1 ? 'recurso' : 'recursos'}
+                  </span>
+                </div>
+                <div className="flex-shrink-0">
+                  {recursosOpen
+                    ? <ChevronUp className="w-5 h-5 text-slate-500" />
+                    : <ChevronDown className="w-5 h-5 text-slate-500" />}
+                </div>
+              </button>
+
+              {recursosOpen && (
+                <div className="px-6 pb-5 space-y-2">
+                  {modulo.recursos.map((recurso, i) => {
+                    const RIcon = getRecursoIcon(recurso.tipo);
+                    return (
                       <a
-                        key={index}
+                        key={i}
                         href={recurso.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-shadow"
+                        className="flex items-center gap-3 p-3 bg-slate-800/60 border border-slate-700/40 rounded-xl hover:border-sky-400/20 hover:bg-slate-800 transition-all duration-150 cursor-pointer group"
                       >
-                        <span className="text-2xl">{recurso.icono}</span>
-                        <div className="flex-1">
-                          <p className="font-semibold text-gray-900">{recurso.nombre}</p>
-                          <p className="text-sm text-gray-600">{recurso.tipo}</p>
+                        <div className={`${C.iconBg} w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0`}>
+                          <RIcon className={`w-3.5 h-3.5 ${C.iconText}`} />
                         </div>
-                        <span className="text-emerald-600">→</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-slate-200 text-sm truncate">{recurso.nombre}</p>
+                          <p className="text-xs text-slate-500">{recurso.tipo}</p>
+                        </div>
+                        <ExternalLink className="w-3.5 h-3.5 text-slate-600 group-hover:text-sky-300 transition-colors flex-shrink-0" />
                       </a>
-                    ))}
-                  </div>
+                    );
+                  })}
                 </div>
               )}
-
-              {/* Descripción de autoevaluación */}
-              <div className="mt-8 bg-blue-50 rounded-xl p-6 border-l-4 border-blue-500">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">
-                  📝 Autoevaluación
-                </h3>
-                <p className="text-gray-700 mb-4">
-                  Para completar este módulo, deberás responder un cuestionario de 5 preguntas. 
-                  Necesitas al menos 3 respuestas correctas para aprobar y obtener tu certificado.
-                </p>
-                <ul className="space-y-2 text-sm text-gray-600">
-                  <li>✓ Total de preguntas: 5</li>
-                  <li>✓ Respuestas correctas necesarias: 3</li>
-                  <li>✓ Certificado descargable en PDF</li>
-                </ul>
-              </div>
-
-              {/* Botón para iniciar examen */}
-              <button
-                onClick={() => setMostrarExamen(true)}
-                className="mt-8 w-full bg-linear-to-r from-emerald-600 to-emerald-500 text-white font-semibold py-4 rounded-xl hover:from-emerald-700 hover:to-emerald-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-              >
-                Iniciar Autoevaluación
-              </button>
             </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Vista del examen
-  if (!resultados) {
-    return (
-      <div className="min-h-screen bg-linear-to-br from-slate-50 to-blue-50 py-12 px-4">
-        <div className="max-w-3xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-xl p-8">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                Autoevaluación: {modulo.titulo}
-              </h2>
-              <p className="text-gray-600">
-                Responde las siguientes preguntas. Necesitas 3 correctas para aprobar.
-              </p>
-            </div>
-
-            <div className="space-y-6">
-              {modulo.examen.map((pregunta, index) => (
-                <div key={index} className="bg-gray-50 rounded-xl p-6">
-                  <p className="font-semibold text-gray-900 mb-4">
-                    {index + 1}. {pregunta.pregunta}
-                  </p>
-                  <div className="space-y-3">
-                    {pregunta.opciones.map((opcion, opIndex) => (
-                      <label
-                        key={opIndex}
-                        className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-all ${
-                          respuestas[index] === opIndex
-                            ? 'bg-emerald-100 border-2 border-emerald-500'
-                            : 'bg-white border-2 border-gray-200 hover:border-emerald-300'
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name={`pregunta-${index}`}
-                          checked={respuestas[index] === opIndex}
-                          onChange={() => handleRespuesta(index, opIndex)}
-                          className="w-4 h-4 text-emerald-600"
-                        />
-                        <span className="text-gray-700">{opcion}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <button
-              onClick={evaluarExamen}
-              disabled={Object.keys(respuestas).length !== modulo.examen.length}
-              className="mt-8 w-full bg-linear-to-r from-blue-600 to-blue-500 text-white font-semibold py-4 rounded-xl hover:from-blue-700 hover:to-blue-600 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Enviar Respuestas
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Vista de resultados
-  const aprobado = resultados.correctas >= 3;
-
-  return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 to-emerald-50 py-12 px-4">
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-          <div className={`w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center ${
-            aprobado ? 'bg-emerald-100' : 'bg-red-100'
-          }`}>
-            <span className="text-5xl">
-              {aprobado ? '🎉' : '📚'}
-            </span>
-          </div>
-
-          <h2 className={`text-3xl font-bold mb-4 ${
-            aprobado ? 'text-emerald-600' : 'text-red-600'
-          }`}>
-            {aprobado ? '¡Felicitaciones!' : 'Sigue Practicando'}
-          </h2>
-
-          <p className="text-xl text-gray-700 mb-6">
-            Obtuviste {resultados.correctas} de {resultados.total} respuestas correctas
-          </p>
-
-          {aprobado ? (
-            <>
-              <p className="text-gray-600 mb-8">
-                Has aprobado el módulo exitosamente. Descarga tu certificado a continuación.
-              </p>
-              <button
-                onClick={generarCertificado}
-                className="w-full bg-linear-to-r from-emerald-600 to-emerald-500 text-white font-semibold py-4 rounded-xl hover:from-emerald-700 hover:to-emerald-600 transition-all duration-200 shadow-lg mb-4"
-              >
-                📄 Descargar Certificado
-              </button>
-            </>
-          ) : (
-            <p className="text-gray-600 mb-8">
-              Necesitas al menos 3 respuestas correctas para aprobar. ¡Revisa el contenido e inténtalo de nuevo!
-            </p>
           )}
 
+          {/* Autoevaluación info */}
+          <div className="bg-slate-900 border border-slate-700/50 rounded-2xl p-6">
+            <div className="flex items-start gap-4">
+              <div className={`${C.iconBg} p-2.5 rounded-xl flex-shrink-0`}>
+                <ClipboardList className={`w-5 h-5 ${C.iconText}`} />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-white text-base mb-2">Autoevaluación</h3>
+                <p className="text-slate-400 text-sm mb-4 leading-relaxed">
+                  Para completar este módulo responde un cuestionario de 5 preguntas.
+                  Necesitas al menos 3 respuestas correctas para aprobar y obtener tu certificado.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {['5 preguntas', '3 correctas para aprobar', 'Certificado PDF'].map((t) => (
+                    <span key={t} className="flex items-center gap-1.5 text-xs text-slate-400 bg-slate-800 border border-slate-700/60 px-2.5 py-1 rounded-full">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-400/70 flex-shrink-0" />
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* CTA */}
           <button
-            onClick={() => navigate('/educativo')}
-            className="w-full bg-gray-200 text-gray-700 font-semibold py-4 rounded-xl hover:bg-gray-300 transition-all duration-200"
+            onClick={() => setMostrarExamen(true)}
+            className="w-full bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold py-4 rounded-2xl transition-all duration-200 shadow-lg hover:shadow-emerald-500/20 hover:-translate-y-0.5 cursor-pointer"
           >
-            Volver a Módulos
+            Iniciar Autoevaluación
           </button>
         </div>
       </div>
-    </div>
+    );
+  }
+
+  /* ════════════════════════════════════════════
+     VISTA: Examen
+  ════════════════════════════════════════════ */
+  if (!resultados) {
+    return (
+      <div className="min-h-screen bg-slate-950 py-10 px-4">
+        <div className="max-w-3xl mx-auto">
+          {/* Header */}
+          <div className="bg-slate-900 rounded-2xl border border-slate-700/50 overflow-hidden mb-6">
+            <div style={{ height: '3px', background: C.hex, boxShadow: `0 0 10px ${C.glow}` }} />
+            <div className="p-6 flex items-center gap-4">
+              <div className={`${C.iconBg} w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0`}>
+                <ClipboardList className={`w-6 h-6 ${C.iconText}`} />
+              </div>
+              <div>
+                <h2 className="font-bold text-white text-xl">Autoevaluación</h2>
+                <p className="text-slate-400 text-sm mt-0.5">{modulo.titulo} · Necesitas 3 correctas para aprobar</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {modulo.examen.map((pregunta, index) => (
+              <div key={index} className="bg-slate-900 rounded-2xl border border-slate-700/50 p-6">
+                <p className="font-semibold text-white text-sm mb-4">
+                  <span className="text-sky-300 mr-2">{index + 1}.</span>{pregunta.pregunta}
+                </p>
+                <div className="space-y-2">
+                  {pregunta.opciones.map((opcion, opIndex) => (
+                    <label
+                      key={opIndex}
+                      className={`flex items-center gap-3 p-3.5 rounded-xl cursor-pointer transition-all duration-150 border ${
+                        respuestas[index] === opIndex
+                          ? 'bg-sky-400/10 border-sky-400/30 text-sky-200'
+                          : 'bg-slate-800/60 border-slate-700/40 text-slate-300 hover:border-slate-600'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name={`q-${index}`}
+                        checked={respuestas[index] === opIndex}
+                        onChange={() => handleRespuesta(index, opIndex)}
+                        className="w-4 h-4 accent-sky-400 flex-shrink-0"
+                      />
+                      <span className="text-sm">{opcion}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={evaluarExamen}
+            disabled={Object.keys(respuestas).length !== modulo.examen.length}
+            className="mt-6 w-full bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold py-4 rounded-2xl transition-all duration-200 shadow-lg disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+          >
+            Enviar Respuestas
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  /* ════════════════════════════════════════════
+     VISTA: Resultados
+  ════════════════════════════════════════════ */
+  const aprobado = resultados.correctas >= 3;
+
+  return (
+    <>
+      {/* ── Modal de vista previa del certificado ── */}
+      {previewUrl && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="w-full max-w-4xl bg-slate-900 rounded-2xl border border-slate-700/50 overflow-hidden shadow-2xl flex flex-col" style={{ maxHeight: '90vh' }}>
+            {/* Modal header */}
+            <div style={{ height: '3px', background: '#34D399', boxShadow: '0 0 10px rgba(52,211,153,0.4)' }} />
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-700/50">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-emerald-400/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <GraduationCap className="w-4 h-4 text-emerald-400" />
+                </div>
+                <div>
+                  <p className="font-bold text-white text-sm">Vista Previa del Certificado</p>
+                  <p className="text-xs text-slate-500 truncate max-w-xs">{previewFilename}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => { URL.revokeObjectURL(previewUrl); setPreviewUrl(null); }}
+                className="text-slate-400 hover:text-white transition-colors cursor-pointer p-1.5 rounded-lg hover:bg-slate-800"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* PDF embed */}
+            <div className="flex-1 overflow-hidden bg-slate-950 min-h-0">
+              <iframe
+                src={previewUrl}
+                title="Vista previa certificado"
+                className="w-full h-full"
+                style={{ minHeight: '500px', border: 'none' }}
+              />
+            </div>
+
+            {/* Modal footer */}
+            <div className="flex items-center gap-3 px-5 py-4 border-t border-slate-700/50">
+              <button
+                onClick={descargarCertificado}
+                className="flex items-center gap-2 bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 cursor-pointer text-sm"
+              >
+                <Download className="w-4 h-4" /> Descargar
+              </button>
+              <button
+                onClick={() => { URL.revokeObjectURL(previewUrl); setPreviewUrl(null); }}
+                className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 cursor-pointer text-sm"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md">
+          <div className="bg-slate-900 rounded-2xl border border-slate-700/50 overflow-hidden text-center">
+            <div style={{ height: '3px', background: aprobado ? '#34D399' : '#F87171', boxShadow: aprobado ? '0 0 10px rgba(52,211,153,0.4)' : '0 0 10px rgba(248,113,113,0.4)' }} />
+
+            <div className="p-8">
+              <div className={`w-20 h-20 rounded-full mx-auto mb-5 flex items-center justify-center ${aprobado ? 'bg-emerald-400/10' : 'bg-amber-400/10'}`}>
+                {aprobado
+                  ? <Trophy className="w-9 h-9 text-emerald-400" />
+                  : <BookOpen className="w-9 h-9 text-amber-400" />}
+              </div>
+
+              <h2 className={`text-2xl font-bold mb-2 ${aprobado ? 'text-emerald-400' : 'text-amber-400'}`}>
+                {aprobado ? '¡Felicitaciones!' : 'Sigue Practicando'}
+              </h2>
+
+              <p className="text-slate-300 text-base mb-1">
+                Obtuviste <span className="font-bold text-white">{resultados.correctas}</span> de <span className="font-bold text-white">{resultados.total}</span> respuestas correctas
+              </p>
+              <p className="text-slate-500 text-sm mb-7">
+                {aprobado
+                  ? 'Has aprobado el módulo exitosamente. Descarga tu certificado.'
+                  : 'Necesitas al menos 3 respuestas correctas. Revisa el contenido e intenta de nuevo.'}
+              </p>
+
+              <div className="space-y-3">
+                {aprobado && (
+                  <button
+                    onClick={generarCertificado}
+                    className="w-full flex items-center justify-center gap-2 bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold py-3.5 rounded-xl transition-all duration-200 cursor-pointer"
+                  >
+                    <Download className="w-4 h-4" /> Ver y Descargar Certificado
+                  </button>
+                )}
+                {!aprobado && (
+                  <button
+                    onClick={() => { setMostrarExamen(false); setRespuestas({}); setResultados(null); }}
+                    className="w-full flex items-center justify-center gap-2 bg-sky-400/10 border border-sky-400/20 hover:bg-sky-400/15 text-sky-300 font-semibold py-3.5 rounded-xl transition-all duration-200 cursor-pointer"
+                  >
+                    <RotateCcw className="w-4 h-4" /> Revisar contenido e intentar de nuevo
+                  </button>
+                )}
+                <button
+                  onClick={() => navigate('/educativo')}
+                  className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-semibold py-3.5 rounded-xl transition-all duration-200 cursor-pointer"
+                >
+                  Volver a Módulos
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
 

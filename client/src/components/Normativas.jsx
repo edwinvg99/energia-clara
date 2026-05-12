@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { Scale, FileText, BookOpen, Award, ChevronDown, ChevronUp, ExternalLink, Info } from "lucide-react";
 
-const COLORS = {
-  rose:   { hex: "#F87171", glow: "rgba(248,113,113,0.4)", iconBg: "bg-red-400/15",    iconText: "text-red-400",    itemBorderColor: "#F87171", noteBg: "bg-red-400/10 text-red-300 border border-red-400/20"       },
-  blue:   { hex: "#38BDF8", glow: "rgba(56,189,248,0.4)",  iconBg: "bg-sky-400/15",    iconText: "text-sky-400",    itemBorderColor: "#38BDF8", noteBg: "bg-sky-400/10 text-sky-300 border border-sky-400/20"       },
-  green:  { hex: "#4ADE80", glow: "rgba(74,222,128,0.4)",  iconBg: "bg-green-400/15",  iconText: "text-green-400",  itemBorderColor: "#4ADE80", noteBg: "bg-green-400/10 text-green-300 border border-green-400/20" },
-  amber:  { hex: "#FCD34D", glow: "rgba(252,211,77,0.4)",  iconBg: "bg-amber-300/15",  iconText: "text-amber-300",  itemBorderColor: "#FCD34D", noteBg: "bg-amber-300/10 text-amber-200 border border-amber-300/20" },
+const C = {
+  hex:     "#7DD3FC",
+  glow:    "rgba(125,211,252,0.2)",
+  iconBg:  "bg-sky-400/10",
+  iconText:"text-sky-300",
+  itemBorderColor: "rgba(125,211,252,0.25)",
+  noteBg:  "bg-sky-400/8 text-sky-300 border border-sky-400/15",
 };
 
 const categorias = [
   {
-    Icono: Scale,     color: "rose",
+    Icono: Scale,
     titulo: "Leyes y Decretos",
     items: [
       { title: "Ley 1715 de 2014", description: "Regula la integración de energías renovables no convencionales al Sistema Energético Nacional", note: "Marco legal principal"   },
@@ -18,7 +20,7 @@ const categorias = [
     ],
   },
   {
-    Icono: FileText,  color: "blue",
+    Icono: FileText,
     titulo: "Resoluciones CREG",
     items: [
       { title: "Resolución CREG 030 de 2018", description: "Regula la autogeneración a pequeña escala y generación distribuida",     note: "Permite venta de excedentes a la red"   },
@@ -26,7 +28,7 @@ const categorias = [
     ],
   },
   {
-    Icono: BookOpen,  color: "green",
+    Icono: BookOpen,
     titulo: "Normas Técnicas",
     items: [
       { title: "NTC 2050 (RETIE)", description: "Reglamento Técnico de Instalaciones Eléctricas — estándares de seguridad",                     note: "Obligatorio para instalaciones" },
@@ -34,7 +36,7 @@ const categorias = [
     ],
   },
   {
-    Icono: Award,     color: "amber",
+    Icono: Award,
     titulo: "Incentivos Tributarios",
     items: [
       { title: "Deducción de Renta",   description: "Hasta el 50% del valor de la inversión deducible del impuesto de renta por 5 años",              note: "Beneficio por 5 años"              },
@@ -51,23 +53,20 @@ const fuentes = [
   { label: "ICONTEC",                       href: "https://icontec.org"           },
 ];
 
-function Accordion({ Icono, color, titulo, items }) {
+function Accordion({ Icono, titulo, items }) {
   const [open, setOpen] = useState(true);
-  const c = COLORS[color];
 
   return (
-    <div className="bg-slate-900 rounded-2xl border border-slate-700/50 mb-4 overflow-hidden hover:border-slate-600/80 transition-colors">
-      {/* Color top accent */}
-      <div style={{ height: "3px", background: c.hex, boxShadow: `0 0 10px ${c.glow}` }} />
+    <div className="bg-slate-900 rounded-2xl border border-slate-700/50 mb-4 overflow-hidden hover:border-sky-400/15 transition-colors">
+      <div style={{ height: "3px", background: C.hex, boxShadow: `0 0 10px ${C.glow}` }} />
 
-      {/* Header */}
       <button
         onClick={() => setOpen(!open)}
         className="w-full px-5 py-4 flex justify-between items-center cursor-pointer hover:bg-slate-800/50 transition-colors"
       >
         <div className="flex items-center gap-3">
-          <div className={`${c.iconBg} w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0`}>
-            <Icono className={`w-5 h-5 ${c.iconText}`} />
+          <div className={`${C.iconBg} w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0`}>
+            <Icono className={`w-5 h-5 ${C.iconText}`} />
           </div>
           <span className="font-bold text-white text-base text-left">{titulo}</span>
           <span className="text-xs text-slate-600 font-medium hidden sm:inline">
@@ -82,18 +81,17 @@ function Accordion({ Icono, color, titulo, items }) {
         </div>
       </button>
 
-      {/* Body */}
       {open && (
         <div className="px-5 pb-5 space-y-3">
           {items.map((item, idx) => (
             <div
               key={idx}
               className="bg-slate-800/60 rounded-xl border border-slate-700/40 border-l-4 p-4"
-              style={{ borderLeftColor: c.hex }}
+              style={{ borderLeftColor: C.itemBorderColor }}
             >
               <h3 className="font-bold text-slate-100 text-sm">{item.title}</h3>
               <p className="text-slate-400 text-sm mt-1 leading-relaxed">{item.description}</p>
-              <span className={`inline-block mt-2 text-xs px-2.5 py-1 rounded-full font-semibold ${c.noteBg}`}>
+              <span className={`inline-block mt-2 text-xs px-2.5 py-1 rounded-full font-semibold ${C.noteBg}`}>
                 {item.note}
               </span>
             </div>
@@ -113,15 +111,15 @@ export default function Normativas() {
           className="absolute inset-0 opacity-[0.03]"
           style={{ backgroundImage: "linear-gradient(rgba(148,163,184,1) 1px,transparent 1px),linear-gradient(90deg,rgba(148,163,184,1) 1px,transparent 1px)", backgroundSize: "40px 40px" }}
         />
-        <div className="absolute -top-16 right-10 w-72 h-72 bg-red-500/8 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-16 right-10 w-72 h-72 bg-emerald-500/8 rounded-full blur-3xl pointer-events-none" />
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 py-14 text-center">
-          <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-red-500/15 text-red-400 border border-red-500/20 mb-4">
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 mb-4">
             <Scale className="h-3 w-3" />
             Marco regulatorio
           </span>
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-3 leading-tight">
             Normativas y{" "}
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-red-400 to-amber-400">
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-teal-400">
               Regulaciones
             </span>
           </h1>
@@ -153,12 +151,12 @@ export default function Normativas() {
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
-        <div className="mb-7">
-          <span className="inline-block text-xs font-semibold bg-red-400/10 text-red-400 border border-red-400/20 px-3 py-1 rounded-full">
+        {/* <div className="mb-7">
+          <span className="inline-block text-xs font-semibold bg-emerald-400/10 text-emerald-400 border border-emerald-400/20 px-3 py-1 rounded-full">
             Regulación vigente
           </span>
           <h2 className="text-xl font-bold text-white mt-2">Marco normativo de energías renovables</h2>
-        </div>
+        </div> */}
 
         {categorias.map((cat, idx) => (
           <Accordion key={idx} {...cat} />

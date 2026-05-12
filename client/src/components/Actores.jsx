@@ -1,18 +1,17 @@
 import React from "react";
 import { Building2, Zap, Briefcase, Users2, Landmark, GraduationCap, Lightbulb } from "lucide-react";
 
-const COLORS = {
-  blue:   { hex: "#38BDF8", glow: "rgba(56,189,248,0.4)",   iconBg: "bg-sky-400/15",     iconText: "text-sky-400",     dot: "bg-sky-400"     },
-  orange: { hex: "#FB923C", glow: "rgba(251,146,60,0.4)",   iconBg: "bg-orange-400/15",  iconText: "text-orange-400",  dot: "bg-orange-400"  },
-  green:  { hex: "#4ADE80", glow: "rgba(74,222,128,0.4)",   iconBg: "bg-green-400/15",   iconText: "text-green-400",   dot: "bg-green-400"   },
-  purple: { hex: "#A78BFA", glow: "rgba(167,139,250,0.4)",  iconBg: "bg-violet-400/15",  iconText: "text-violet-400",  dot: "bg-violet-400"  },
-  teal:   { hex: "#2DD4BF", glow: "rgba(45,212,191,0.4)",   iconBg: "bg-teal-400/15",    iconText: "text-teal-400",    dot: "bg-teal-400"    },
-  indigo: { hex: "#818CF8", glow: "rgba(129,140,248,0.4)",  iconBg: "bg-indigo-400/15",  iconText: "text-indigo-400",  dot: "bg-indigo-400"  },
+const C = {
+  hex:     "#7DD3FC",
+  glow:    "rgba(125,211,252,0.2)",
+  iconBg:  "bg-sky-400/10",
+  iconText:"text-sky-300",
+  dot:     "bg-sky-400/50",
 };
 
 const categorias = [
   {
-    Icono: Building2, color: "blue",
+    Icono: Building2,
     titulo: "Instituciones Gubernamentales",
     items: [
       { nombre: "Ministerio de Minas y Energía", desc: "Define políticas energéticas nacionales y regula el sector" },
@@ -21,7 +20,7 @@ const categorias = [
     ],
   },
   {
-    Icono: Zap, color: "orange",
+    Icono: Zap,
     titulo: "Operadores de Red",
     items: [
       { nombre: "Empresas Distribuidoras",   desc: "Gestionan conexión a red, medición y distribución de energía" },
@@ -29,7 +28,7 @@ const categorias = [
     ],
   },
   {
-    Icono: Briefcase, color: "green",
+    Icono: Briefcase,
     titulo: "Sector Privado",
     items: [
       { nombre: "Empresas Instaladoras",  desc: "Diseñan, suministran e instalan sistemas renovables" },
@@ -38,7 +37,7 @@ const categorias = [
     ],
   },
   {
-    Icono: Users2, color: "purple",
+    Icono: Users2,
     titulo: "Comunidad",
     items: [
       { nombre: "Juntas de Acción Comunal", desc: "Representan intereses de la comunidad y gestionan proyectos" },
@@ -47,7 +46,7 @@ const categorias = [
     ],
   },
   {
-    Icono: Landmark, color: "teal",
+    Icono: Landmark,
     titulo: "Entidades Financieras",
     items: [
       { nombre: "Bancos",   desc: "Ofrecen líneas de crédito para proyectos de energía renovable" },
@@ -55,7 +54,7 @@ const categorias = [
     ],
   },
   {
-    Icono: GraduationCap, color: "indigo",
+    Icono: GraduationCap,
     titulo: "Academia y Sociedad Civil",
     items: [
       { nombre: "Universidades",    desc: "Investigan, capacitan y asesoran en tecnologías renovables" },
@@ -64,29 +63,25 @@ const categorias = [
   },
 ];
 
-function ActorCard({ Icono, color, titulo, items }) {
-  const c = COLORS[color];
+function ActorCard({ Icono, titulo, items }) {
   return (
-    <div className="bg-slate-900 rounded-2xl border border-slate-700/50 hover:border-slate-600/80 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/30 transition-all duration-200 overflow-hidden">
-      {/* Color top accent */}
-      <div style={{ height: "3px", background: c.hex, boxShadow: `0 0 10px ${c.glow}` }} />
+    <div className="bg-slate-900 rounded-2xl border border-slate-700/50 hover:border-sky-400/20 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/30 transition-all duration-200 overflow-hidden">
+      <div style={{ height: "3px", background: C.hex, boxShadow: `0 0 10px ${C.glow}` }} />
 
       <div className="p-5">
-        {/* Header */}
         <div className="flex items-center gap-3 mb-4">
-          <div className={`${c.iconBg} p-2.5 rounded-xl flex-shrink-0`}>
-            <Icono className={`w-5 h-5 ${c.iconText}`} />
+          <div className={`${C.iconBg} p-2.5 rounded-xl flex-shrink-0`}>
+            <Icono className={`w-5 h-5 ${C.iconText}`} />
           </div>
           <h3 className="font-bold text-white text-sm leading-tight">{titulo}</h3>
         </div>
 
-        {/* Items — dot bullet, not numbered */}
         <ul className="space-y-3">
           {items.map((item, i) => (
             <li key={i} className="flex items-start gap-2.5">
               <span
-                className={`w-1.5 h-1.5 rounded-full ${c.dot} flex-shrink-0 mt-1.5`}
-                style={{ boxShadow: `0 0 5px ${c.glow}` }}
+                className={`w-1.5 h-1.5 rounded-full ${C.dot} flex-shrink-0 mt-1.5`}
+                style={{ boxShadow: `0 0 5px ${C.glow}` }}
               />
               <div className="min-w-0">
                 <p className="font-semibold text-slate-200 text-sm leading-tight">{item.nombre}</p>
@@ -109,15 +104,15 @@ const Actores = () => {
           className="absolute inset-0 opacity-[0.03]"
           style={{ backgroundImage: "linear-gradient(rgba(148,163,184,1) 1px,transparent 1px),linear-gradient(90deg,rgba(148,163,184,1) 1px,transparent 1px)", backgroundSize: "40px 40px" }}
         />
-        <div className="absolute -top-16 right-0 w-80 h-80 bg-violet-500/8 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-16 right-0 w-80 h-80 bg-emerald-500/8 rounded-full blur-3xl pointer-events-none" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-14 text-center">
-          <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-violet-500/15 text-violet-400 border border-violet-500/20 mb-4">
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 mb-4">
             <Users2 className="h-3 w-3" />
             Ecosistema energético
           </span>
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-3 leading-tight">
             Actores{" "}
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-violet-400 to-indigo-400">
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-teal-400">
               Involucrados
             </span>
           </h1>
@@ -148,12 +143,12 @@ const Actores = () => {
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
-        <div className="mb-7">
-          <span className="inline-block text-xs font-semibold bg-violet-400/10 text-violet-400 border border-violet-400/20 px-3 py-1 rounded-full">
+        {/* <div className="mb-7">
+          <span className="inline-block text-xs font-semibold bg-emerald-400/10 text-emerald-400 border border-emerald-400/20 px-3 py-1 rounded-full">
             Mapa de actores
           </span>
           <h2 className="text-xl font-bold text-white mt-2">¿Quién hace qué en el sector renovable?</h2>
-        </div>
+        </div> */}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {categorias.map((cat, idx) => <ActorCard key={idx} {...cat} />)}

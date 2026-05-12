@@ -17,7 +17,8 @@ import API_URL from "../api";
 const TIPO_CONFIG = {
   Hidráulica: {
     hex: "#38BDF8",
-    glow: "rgba(56,189,248,0.35)",
+    gradient: "linear-gradient(90deg, #7DD3FC, #0284C7)",
+    glow: "rgba(2,132,199,0.5)",
     text: "text-sky-400",
     badge: "bg-sky-400/10 text-sky-300 border border-sky-400/20",
     iconBg: "bg-sky-400/15",
@@ -25,7 +26,8 @@ const TIPO_CONFIG = {
   },
   Solar: {
     hex: "#FCD34D",
-    glow: "rgba(252,211,77,0.35)",
+    gradient: "linear-gradient(90deg, #FDE68A, #D97706)",
+    glow: "rgba(217,119,6,0.5)",
     text: "text-amber-300",
     badge: "bg-amber-300/10 text-amber-300 border border-amber-300/20",
     iconBg: "bg-amber-300/15",
@@ -33,7 +35,8 @@ const TIPO_CONFIG = {
   },
   Eólica: {
     hex: "#34D399",
-    glow: "rgba(52,211,153,0.35)",
+    gradient: "linear-gradient(90deg, #6EE7B7, #059669)",
+    glow: "rgba(5,150,105,0.5)",
     text: "text-emerald-400",
     badge: "bg-emerald-400/10 text-emerald-400 border border-emerald-400/20",
     iconBg: "bg-emerald-400/15",
@@ -41,7 +44,8 @@ const TIPO_CONFIG = {
   },
   Térmica: {
     hex: "#F87171",
-    glow: "rgba(248,113,113,0.35)",
+    gradient: "linear-gradient(90deg, #FCA5A5, #DC2626)",
+    glow: "rgba(220,38,38,0.5)",
     text: "text-red-400",
     badge: "bg-red-400/10 text-red-400 border border-red-400/20",
     iconBg: "bg-red-400/15",
@@ -49,7 +53,8 @@ const TIPO_CONFIG = {
   },
   Cogeneración: {
     hex: "#A78BFA",
-    glow: "rgba(167,139,250,0.35)",
+    gradient: "linear-gradient(90deg, #C4B5FD, #7C3AED)",
+    glow: "rgba(124,58,237,0.5)",
     text: "text-violet-400",
     badge: "bg-violet-400/10 text-violet-400 border border-violet-400/20",
     iconBg: "bg-violet-400/15",
@@ -57,7 +62,8 @@ const TIPO_CONFIG = {
   },
   "Filo de Agua": {
     hex: "#22D3EE",
-    glow: "rgba(34,211,238,0.35)",
+    gradient: "linear-gradient(90deg, #67E8F9, #0891B2)",
+    glow: "rgba(8,145,178,0.5)",
     text: "text-cyan-400",
     badge: "bg-cyan-400/10 text-cyan-400 border border-cyan-400/20",
     iconBg: "bg-cyan-400/15",
@@ -67,7 +73,8 @@ const TIPO_CONFIG = {
 
 const DEFAULT_CFG = {
   hex: "#94A3B8",
-  glow: "rgba(148,163,184,0.25)",
+  gradient: "linear-gradient(90deg, #CBD5E1, #475569)",
+  glow: "rgba(71,85,105,0.4)",
   text: "text-slate-400",
   badge: "bg-slate-400/10 text-slate-400 border border-slate-400/20",
   iconBg: "bg-slate-400/15",
@@ -122,8 +129,8 @@ function BarSkeleton() {
             <div className="h-4 bg-slate-700 rounded w-24" />
             <div className="h-4 bg-slate-700 rounded w-16" />
           </div>
-          <div className="h-7 bg-slate-800 rounded-full" style={{ width: "100%" }}>
-            <div className="h-7 bg-slate-700 rounded-full" style={{ width: `${w}%` }} />
+          <div className="h-2 bg-slate-800 rounded-full" style={{ width: "100%" }}>
+            <div className="h-2 bg-slate-700 rounded-full" style={{ width: `${w}%` }} />
           </div>
         </div>
       ))}
@@ -430,11 +437,11 @@ function SIMEM() {
                             <span className="text-sm font-medium text-slate-200">
                               {item.tipo}
                             </span>
-                            {item.esRenovable && (
-                              <span className="text-xs bg-emerald-400/10 text-emerald-400 border border-emerald-400/20 px-1.5 py-0.5 rounded font-semibold">
+                            {/* {item.esRenovable && (
+                              <span className="text-xs bg-emerald-400/10 text-red-400 border border-emerald-400/20 px-1.5 py-0.5 rounded font-semibold">
                                 Renovable
                               </span>
-                            )}
+                            )} */}
                           </div>
                           <div className="flex items-center gap-3">
                             <span className="text-sm text-slate-500 tabular-nums">
@@ -448,22 +455,15 @@ function SIMEM() {
                           </div>
                         </div>
                         {/* Bar track */}
-                        <div className="h-7 bg-slate-800 rounded-full overflow-hidden">
+                        <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
                           <div
-                            className="h-full rounded-full transition-all duration-700 flex items-center justify-end pr-3"
+                            className="h-full rounded-full transition-all duration-700"
                             style={{
                               width: `${Math.max(item.pctDelTotal, 1)}%`,
-                              backgroundColor: c.hex,
-                              boxShadow: `0 0 16px ${c.glow}`,
-                              opacity: 0.9,
+                              background: c.gradient,
+                              boxShadow: `0 0 8px ${c.glow}`,
                             }}
-                          >
-                            {item.pctDelTotal > 7 && (
-                              <span className="text-slate-900 text-xs font-bold">
-                                {item.pctDelTotal}%
-                              </span>
-                            )}
-                          </div>
+                          />
                         </div>
                       </div>
                     );
@@ -471,31 +471,24 @@ function SIMEM() {
                 </div>
 
                 {/* Barra apilada proporcional */}
-                <div className="mt-10">
+                <div className="mt-10 ">
                   <p className="text-xs text-slate-500 mb-3 font-semibold uppercase tracking-widest">
                     Vista proporcional del mix
                   </p>
-                  <div className="flex h-9 rounded-xl overflow-hidden w-full gap-px">
+                  <div className="flex h-2.5 rounded-full overflow-hidden w-full gap-px">
                     {datos.resumenPorTipo.map((item) => {
                       if (item.pctDelTotal === 0) return null;
                       const c = cfg(item.tipo);
                       return (
                         <div
                           key={item.tipo}
-                          className="flex items-center justify-center transition-all"
+                          className="transition-all"
                           style={{
                             width: `${item.pctDelTotal}%`,
-                            backgroundColor: c.hex,
-                            opacity: 0.85,
+                            background: c.gradient,
                           }}
                           title={`${item.tipo}: ${item.pctDelTotal}%`}
-                        >
-                          {item.pctDelTotal > 9 && (
-                            <span className="text-slate-900 text-xs font-bold truncate px-1">
-                              {item.tipo.split(" ")[0]}
-                            </span>
-                          )}
-                        </div>
+                        />
                       );
                     })}
                   </div>
