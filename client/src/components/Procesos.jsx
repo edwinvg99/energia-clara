@@ -147,9 +147,9 @@ function Procesos() {
         {/* Time estimate */}
         <div className="mt-8 bg-slate-900 border border-slate-700/50 rounded-2xl p-5">
           <div className="flex items-start gap-4">
-            <div className="bg-sky-400/15 p-2.5 rounded-xl flex-shrink-0">
+            {/* <div className="bg-sky-400/15 p-2.5 rounded-xl flex-shrink-0">
               <Clock className="w-5 h-5 text-sky-400" />
-            </div>
+            </div> */}
             <div>
               <p className="font-bold text-white text-sm mb-1">Tiempo estimado del proceso completo</p>
               <p className="text-slate-400 text-sm leading-relaxed">
