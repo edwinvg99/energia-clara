@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Scale, FileText, BookOpen, Award, ChevronDown, ChevronUp, ExternalLink, Info } from "lucide-react";
+import { useFadeInStagger } from "../hooks/useAnime";
 
 const C = {
   hex:     "#7DD3FC",
@@ -103,6 +104,7 @@ function Accordion({ Icono, titulo, items }) {
 }
 
 export default function Normativas() {
+  const listRef = useFadeInStagger(0.05);
   return (
     <div className="min-h-screen bg-slate-950">
       {/* Hero */}
@@ -158,9 +160,11 @@ export default function Normativas() {
           <h2 className="text-xl font-bold text-white mt-2">Marco normativo de energías renovables</h2>
         </div> */}
 
-        {categorias.map((cat, idx) => (
-          <Accordion key={idx} {...cat} />
-        ))}
+        <div ref={listRef}>
+          {categorias.map((cat, idx) => (
+            <Accordion key={idx} {...cat} />
+          ))}
+        </div>
 
         {/* Sources */}
         <div className="bg-slate-900 border border-slate-700/50 rounded-2xl p-5 mt-6">

@@ -1,5 +1,6 @@
 import React from "react";
 import { Building2, Zap, Briefcase, Users2, Landmark, GraduationCap, Lightbulb } from "lucide-react";
+import { useFadeInStagger } from "../hooks/useAnime";
 
 const C = {
   hex:     "#7DD3FC",
@@ -96,6 +97,7 @@ function ActorCard({ Icono, titulo, items }) {
 }
 
 const Actores = () => {
+  const cardsRef = useFadeInStagger(0.02);
   return (
     <div className="min-h-screen bg-slate-950">
       {/* Hero */}
@@ -150,16 +152,16 @@ const Actores = () => {
           <h2 className="text-xl font-bold text-white mt-2">¿Quién hace qué en el sector renovable?</h2>
         </div> */}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {categorias.map((cat, idx) => <ActorCard key={idx} {...cat} />)}
         </div>
 
         {/* Callout */}
         <div className="mt-10 bg-slate-900 border border-slate-700/50 rounded-2xl p-6">
           <div className="flex items-start gap-4">
-            <div className="bg-linear-to-br from-violet-500 to-indigo-600 p-3 rounded-xl flex-shrink-0 shadow-lg">
+            {/* <div className="bg-linear-to-br from-violet-500 to-indigo-600 p-3 rounded-xl flex-shrink-0 shadow-lg">
               <Lightbulb className="w-5 h-5 text-white" />
-            </div>
+            </div> */}
             <div className="flex-1">
               <h3 className="font-bold text-white text-base mb-2">Colaboración entre actores</h3>
               <p className="text-slate-400 text-sm leading-relaxed max-w-2xl">

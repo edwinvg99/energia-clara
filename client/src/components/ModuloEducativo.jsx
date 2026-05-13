@@ -163,7 +163,7 @@ function ModuloEducativo() {
 
       // ── Vertical centering ──
       // Content block spans ~157mm; offset pushes it to vertical center of 210mm page
-      const YO = 18; // vertical offset (mm) to center all content
+      const YO = 28; // vertical offset (mm) to center all content
 
       // ── Logo (PNG with transparency) ──
       if (logoImg) {

@@ -1,5 +1,6 @@
 import React from "react";
 import { DollarSign, Leaf, Zap, Home, BarChart2, Shield, CheckCircle } from "lucide-react";
+import { useFadeInStagger, useFadeInReveal } from "../hooks/useAnime";
 
 const C = {
   hex:     "#7DD3FC",
@@ -54,6 +55,8 @@ function BenefitCard({ icon: Icon, title, description, stat, statLabel }) {
 }
 
 function Beneficios() {
+  const cardsRef = useFadeInStagger(0.02);
+  const attrRef  = useFadeInReveal(0.1);
   return (
     <div className="min-h-screen bg-slate-950">
       {/* Hero */}
@@ -109,16 +112,16 @@ function Beneficios() {
           <h2 className="text-xl font-bold text-white mt-2">6 razones para adoptar energías renovables</h2>
         </div> */}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-10">
+        <div ref={cardsRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-10">
           {benefits.map((b) => <BenefitCard key={b.title} {...b} />)}
         </div>
 
         {/* Attribution */}
-        <div className="bg-slate-900 border border-slate-700/50 rounded-2xl p-6">
+        <div ref={attrRef} className="bg-slate-900 border border-slate-700/50 rounded-2xl p-6">
           <div className="flex items-start gap-4">
-            <div className="w-10 h-10 bg-emerald-400/15 rounded-xl flex items-center justify-center flex-shrink-0">
+            {/* <div className="w-10 h-10 bg-emerald-400/15 rounded-xl flex items-center justify-center flex-shrink-0">
               <CheckCircle className="w-5 h-5 text-emerald-400" />
-            </div>
+            </div> */}
             <div className="flex-1">
               <h3 className="text-base font-bold text-white mb-1">Información basada en fuentes oficiales</h3>
               <p className="text-sm text-slate-400 mb-4 max-w-2xl">

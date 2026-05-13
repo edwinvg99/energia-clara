@@ -6,21 +6,25 @@ import {
 } from "lucide-react";
 import API_URL from "../api";
 import { getAuthHeaders } from "../services/authService";
-
-const C = {
-  hex:     "#7DD3FC",
-  glow:    "rgba(125,211,252,0.2)",
-  iconBg:  "bg-sky-400/10",
-  iconText:"text-sky-300",
-};
+import { useFadeInStagger, useFadeInReveal } from "../hooks/useAnime";
 
 // Cycled per card — no emojis
 const MODULE_ICONS = [Leaf, Zap, Share2, Users2, Globe, Sun, BookOpen, GraduationCap];
+
+// Subtle per-module accent colors (hex + glow + icon tint)
+const MODULE_COLORS = [
+  { hex: "#7DD3FC", glow: "rgba(125,211,252,0.18)", iconBg: "bg-sky-400/10",    iconText: "text-sky-300"    }, // sky
+  { hex: "#34D399", glow: "rgba(52,211,153,0.18)",  iconBg: "bg-emerald-400/10",iconText: "text-emerald-300"}, // emerald
+  { hex: "#A78BFA", glow: "rgba(167,139,250,0.18)", iconBg: "bg-violet-400/10", iconText: "text-violet-300" }, // violet
+  { hex: "#FB923C", glow: "rgba(251,146,60,0.18)",  iconBg: "bg-orange-400/10", iconText: "text-orange-300" }, // orange
+];
 
 const Educativo = () => {
   const [modulos, setModulos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError]   = useState(null);
+  const cardsRef   = useFadeInStagger(0.02);
+  const howItRef   = useFadeInReveal(0.1);
 
   useEffect(() => {
     fetch(`${API_URL}/api/educativo/modulos`, { headers: getAuthHeaders() })
@@ -106,23 +110,37 @@ const Educativo = () => {
           <h2 className="text-xl font-bold text-white mt-2">Explora el contenido disponible</h2>
         </div> */}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {modulos.map((modulo, idx) => {
             const Icon = MODULE_ICONS[idx % MODULE_ICONS.length];
+            const MC   = MODULE_COLORS[idx % MODULE_COLORS.length];
             return (
               <Link
                 key={modulo.id}
                 to={`/educativo/${modulo.id}`}
-                className="group bg-slate-900 rounded-2xl border border-slate-700/50 hover:border-sky-400/20 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/30 transition-all duration-200 overflow-hidden cursor-pointer"
+                className="group bg-slate-900 rounded-2xl border border-slate-700/50 hover:-translate-y-0.5 transition-all duration-200 overflow-hidden cursor-pointer"
+                style={{
+                  "--mc-hex":  MC.hex,
+                  "--mc-glow": MC.glow,
+                  boxShadow: "0 0 0 0 transparent",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = MC.hex + "33";
+                  e.currentTarget.style.boxShadow   = `0 8px 30px ${MC.glow}, 0 0 0 1px ${MC.hex}22`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "";
+                  e.currentTarget.style.boxShadow   = "";
+                }}
               >
                 {/* Top accent */}
-                <div style={{ height: "3px", background: C.hex, boxShadow: `0 0 10px ${C.glow}` }} />
+                <div style={{ height: "3px", background: MC.hex, boxShadow: `0 0 10px ${MC.glow}` }} />
 
                 <div className="p-6">
                   {/* Header */}
                   <div className="flex items-start gap-4 mb-4">
-                    <div className={`${C.iconBg} w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0`}>
-                      <Icon className={`w-6 h-6 ${C.iconText}`} />
+                    <div className={`${MC.iconBg} w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0`}>
+                      <Icon className={`w-6 h-6 ${MC.iconText}`} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h2 className="font-bold text-white text-lg leading-tight">{modulo.titulo}</h2>
@@ -134,15 +152,15 @@ const Educativo = () => {
                   <div className="flex flex-wrap gap-2 mb-5">
                     <span className="flex items-center gap-1.5 text-xs text-slate-400 bg-slate-800 border border-slate-700/60 px-2.5 py-1 rounded-full">
                       <FileText className="w-3 h-3 flex-shrink-0" />
-                      {modulo.contenido?.length ?? 0} secciones
+                      {modulo.totalSecciones ?? 0} secciones
                     </span>
                     <span className="flex items-center gap-1.5 text-xs text-slate-400 bg-slate-800 border border-slate-700/60 px-2.5 py-1 rounded-full">
                       <ClipboardList className="w-3 h-3 flex-shrink-0" />
-                      {modulo.examen?.length ?? 0} preguntas
+                      {modulo.totalPreguntas ?? 0} preguntas
                     </span>
                     <span className="flex items-center gap-1.5 text-xs text-slate-400 bg-slate-800 border border-slate-700/60 px-2.5 py-1 rounded-full">
                       <Link2 className="w-3 h-3 flex-shrink-0" />
-                      {modulo.recursos?.length ?? 0} recursos
+                      {modulo.totalRecursos ?? 0} recursos
                     </span>
                     <span className="flex items-center gap-1.5 text-xs text-slate-400 bg-slate-800 border border-slate-700/60 px-2.5 py-1 rounded-full">
                       <Clock className="w-3 h-3 flex-shrink-0" />
@@ -156,7 +174,10 @@ const Educativo = () => {
                       <GraduationCap className="w-3.5 h-3.5 flex-shrink-0" />
                       Certificado digital al aprobar
                     </div>
-                    <span className="flex items-center gap-1 text-xs font-semibold text-sky-300 group-hover:text-sky-200 transition-colors">
+                    <span
+                      className="flex items-center gap-1 text-xs font-semibold transition-colors"
+                      style={{ color: MC.hex }}
+                    >
                       Comenzar
                       <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform duration-150" />
                     </span>
@@ -168,7 +189,7 @@ const Educativo = () => {
         </div>
 
         {/* How it works */}
-        <div className="mt-10 bg-slate-900 border border-slate-700/50 rounded-2xl p-6">
+        <div ref={howItRef} className="mt-10 bg-slate-900 border border-slate-700/50 rounded-2xl p-6">
           <div className="flex items-start gap-4">
             {/* <div className={`${C.iconBg} p-3 rounded-xl flex-shrink-0`}>
               <BookOpen className={`w-5 h-5 ${C.iconText}`} />
