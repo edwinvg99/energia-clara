@@ -50,15 +50,26 @@ function ModuloEducativo() {
   const ModIcon = MODULE_ICONS[Math.max(iconIdx, 0) % MODULE_ICONS.length];
 
   useEffect(() => {
-    fetch(`${API_URL}/api/educativo/modulos/${moduloId}`, { headers: getAuthHeaders() })
+    const ctrl = new AbortController();
+    setLoading(true);
+    fetch(`${API_URL}/api/educativo/modulos/${moduloId}`, {
+      headers: getAuthHeaders(),
+      signal: ctrl.signal,
+    })
       .then((res) => {
         if (res.status === 404) throw new Error('not_found');
         if (!res.ok) throw new Error('error');
         return res.json();
       })
       .then((data) => setModulo(data))
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
+      .catch((err) => {
+        if (err.name === 'AbortError') return;
+        setError(err.message);
+      })
+      .finally(() => {
+        if (!ctrl.signal.aborted) setLoading(false);
+      });
+    return () => ctrl.abort();
   }, [moduloId]);
 
   /* ── Loading ── */

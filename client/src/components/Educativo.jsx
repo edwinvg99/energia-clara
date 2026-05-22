@@ -27,14 +27,24 @@ const Educativo = () => {
   const howItRef   = useFadeInReveal(0.1);
 
   useEffect(() => {
-    fetch(`${API_URL}/api/educativo/modulos`, { headers: getAuthHeaders() })
+    const ctrl = new AbortController();
+    fetch(`${API_URL}/api/educativo/modulos`, {
+      headers: getAuthHeaders(),
+      signal: ctrl.signal,
+    })
       .then((res) => {
         if (!res.ok) throw new Error("Error al cargar los módulos");
         return res.json();
       })
       .then((data) => setModulos(data))
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
+      .catch((err) => {
+        if (err.name === 'AbortError') return;
+        setError(err.message);
+      })
+      .finally(() => {
+        if (!ctrl.signal.aborted) setLoading(false);
+      });
+    return () => ctrl.abort();
   }, []);
 
   if (loading) {
