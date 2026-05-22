@@ -171,15 +171,12 @@ function Home() {
       <div className="bg-slate-900 border-b border-slate-700/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div ref={statsRef} className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-slate-700/50">
-            {stats.map((s, i) => {
-              const MC = PALETTE[i % PALETTE.length];
-              return (
-                <div key={s.label} className="text-center py-5 px-3">
-                  <p className="text-2xl font-bold" style={{ color: MC.hex }}>{s.number}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">{s.label}</p>
-                </div>
-              );
-            })}
+            {stats.map((s) => (
+              <div key={s.label} className="text-center py-5 px-3">
+                <p className="text-2xl font-bold" style={{ color: PALETTE[1].hex }}>{s.number}</p>
+                <p className="text-xs text-slate-500 mt-0.5">{s.label}</p>
+              </div>
+            ))}
           </div>
         </div>
       </div>
