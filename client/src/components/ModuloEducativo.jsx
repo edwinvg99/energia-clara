@@ -36,6 +36,7 @@ function ModuloEducativo() {
   const [mostrarExamen, setMostrarExamen] = useState(false);
   const [respuestas, setRespuestas]   = useState({});
   const [resultados, setResultados]   = useState(null);
+  const [evaluando, setEvaluando]     = useState(false);
   const [recursosOpen, setRecursosOpen] = useState(false);
   const [previewUrl, setPreviewUrl]   = useState(null);
   const [previewFilename, setPreviewFilename] = useState('');
@@ -53,7 +54,6 @@ function ModuloEducativo() {
     const ctrl = new AbortController();
     setLoading(true);
     fetch(`${API_URL}/api/educativo/modulos/${moduloId}`, {
-      headers: getAuthHeaders(),
       signal: ctrl.signal,
     })
       .then((res) => {
@@ -112,10 +112,22 @@ function ModuloEducativo() {
 
   const handleRespuesta = (i, opcion) => setRespuestas({ ...respuestas, [i]: opcion });
 
-  const evaluarExamen = () => {
-    let correctas = 0;
-    modulo.examen.forEach((p, i) => { if (respuestas[i] === p.correcta) correctas++; });
-    setResultados({ correctas, total: modulo.examen.length });
+  const evaluarExamen = async () => {
+    setEvaluando(true);
+    try {
+      const res = await fetch(`${API_URL}/api/educativo/modulos/${moduloId}/evaluar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ respuestas }),
+      });
+      if (!res.ok) throw new Error('error');
+      const data = await res.json();
+      setResultados({ correctas: data.correctas, total: data.total });
+    } catch {
+      setError('error');
+    } finally {
+      setEvaluando(false);
+    }
   };
 
   /* ── Certificate PDF — dark premium ── */
@@ -465,10 +477,10 @@ function ModuloEducativo() {
 
           <button
             onClick={evaluarExamen}
-            disabled={Object.keys(respuestas).length !== modulo.examen.length}
+            disabled={evaluando || Object.keys(respuestas).length !== modulo.examen.length}
             className="mt-6 w-full bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold py-4 rounded-2xl transition-all duration-200 shadow-lg disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
           >
-            Enviar Respuestas
+            {evaluando ? 'Evaluando...' : 'Enviar Respuestas'}
           </button>
         </div>
       </div>
