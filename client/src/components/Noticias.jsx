@@ -2,20 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { Newspaper, ExternalLink, RefreshCw, Search, Filter, Loader2, AlertTriangle, Globe } from 'lucide-react';
 import API_URL from '../api';
 
-const CATEGORIAS = [
-  { value: '', label: 'Todas las categorías' },
-  { value: 'Gobierno', label: 'Gobierno' },
-  { value: 'Medios', label: 'Medios' },
-];
-
 const CATEGORIA_BADGE = {
   Gobierno: 'bg-sky-400/10 text-sky-300 border border-sky-400/20',
   Medios:   'bg-amber-300/10 text-amber-300 border border-amber-300/20',
+  Gremio:   'bg-violet-400/10 text-violet-300 border border-violet-400/20',
 };
 
 const FUENTE_BADGE = {
   Gobierno: 'bg-sky-400/8 text-sky-400',
   Medios:   'bg-amber-300/8 text-amber-300',
+  Gremio:   'bg-violet-400/8 text-violet-400',
 };
 
 function NoticiaCard({ noticia }) {
@@ -114,6 +110,10 @@ function Noticias() {
 
   const selectClass = "bg-slate-900 border border-slate-700 text-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/60 cursor-pointer";
 
+  const categoriasDisponibles = Array.from(
+    new Set(fuentes.map((f) => f.categoria).filter(Boolean))
+  ).sort();
+
   return (
     <div className="min-h-screen bg-slate-950">
       {/* Hero */}
@@ -181,8 +181,9 @@ function Noticias() {
                 onChange={(e) => { setCategoriaFiltro(e.target.value); setLoading(true); }}
                 className={selectClass}
               >
-                {CATEGORIAS.map((c) => (
-                  <option key={c.value} value={c.value} className="bg-slate-900">{c.label}</option>
+                <option value="" className="bg-slate-900">Todas las categorías</option>
+                {categoriasDisponibles.map((cat) => (
+                  <option key={cat} value={cat} className="bg-slate-900">{cat}</option>
                 ))}
               </select>
 
