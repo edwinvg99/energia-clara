@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   RefreshCw, AlertCircle, TrendingUp, TrendingDown, Minus,
   Activity, Zap, BarChart2, Droplets, Wind, DollarSign,
@@ -384,6 +384,16 @@ export default function Indicadores() {
 
   useEffect(() => { fetchTodos(rangoDias); }, [rangoDias, fetchTodos]);
 
+  // Rango real de fechas presente en los datos (min y max de todas las métricas)
+  const rangoFechas = useMemo(() => {
+    const fechas = indicadores
+      .flatMap((ind) => (ind.datos || []).map((d) => d.fecha))
+      .filter(Boolean)
+      .sort();
+    if (fechas.length === 0) return null;
+    return { desde: fechas[0], hasta: fechas[fechas.length - 1] };
+  }, [indicadores]);
+
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
@@ -476,6 +486,16 @@ export default function Indicadores() {
             {refreshing ? "Actualizando..." : "Actualizar"}
           </button>
         </div>
+
+        {/* Rango de fechas del período seleccionado */}
+        {!loading && !error && rangoFechas && (
+          <p className="text-xs text-slate-500 -mt-4 mb-7">
+            Mostrando datos del{" "}
+            <span className="text-slate-300 font-medium">{formatFecha(rangoFechas.desde)}</span>{" "}
+            al{" "}
+            <span className="text-slate-300 font-medium">{formatFecha(rangoFechas.hasta)}</span>
+          </p>
+        )}
 
         {/* Loading */}
         {loading && (

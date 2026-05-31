@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Newspaper, ExternalLink, RefreshCw, Search, Filter, Loader2, AlertTriangle, Globe } from 'lucide-react';
+import { Newspaper, ExternalLink, RefreshCw, Search, Filter, Loader2, AlertTriangle, Globe, Calendar, CalendarClock } from 'lucide-react';
 import API_URL from '../api';
 
 const CATEGORIA_BADGE = {
@@ -43,16 +43,24 @@ function NoticiaCard({ noticia }) {
             {noticia.resumen}
           </p>
         )}
-        <a
-          href={noticia.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 text-xs font-semibold mt-auto transition-colors"
-          onClick={(e) => e.stopPropagation()}
-        >
-          Leer más
-          <ExternalLink className="h-3 w-3" />
-        </a>
+        <div className="flex items-center justify-between gap-2 mt-auto pt-1">
+          <a
+            href={noticia.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 text-xs font-semibold transition-colors"
+            onClick={(e) => e.stopPropagation()}
+          >
+            Leer más
+            <ExternalLink className="h-3 w-3" />
+          </a>
+          {noticia.fecha && (
+            <span className="inline-flex items-center gap-1 text-xs text-slate-600 shrink-0">
+              <Calendar className="h-3 w-3" />
+              {noticia.fecha}
+            </span>
+          )}
+        </div>
       </div>
     </article>
   );
@@ -113,6 +121,8 @@ function Noticias() {
   const categoriasDisponibles = Array.from(
     new Set(fuentes.map((f) => f.categoria).filter(Boolean))
   ).sort();
+
+  const hayFiltrosActivos = Boolean(categoriaFiltro || fuenteFiltro || busqueda.trim());
 
   return (
     <div className="min-h-screen bg-slate-950">
@@ -226,13 +236,23 @@ function Noticias() {
             <p className="text-slate-500 text-sm">Cargando noticias...</p>
           </div>
         ) : noticias.length === 0 ? (
-          <div className="text-center py-24">
-            <div className="bg-slate-800/50 border border-slate-700/50 rounded-full p-6 w-24 h-24 flex items-center justify-center mx-auto mb-5">
-              <Globe className="h-10 w-10 text-slate-600" />
+          hayFiltrosActivos ? (
+            <div className="text-center py-24">
+              <div className="bg-slate-800/50 border border-slate-700/50 rounded-full p-6 w-24 h-24 flex items-center justify-center mx-auto mb-5">
+                <Search className="h-10 w-10 text-slate-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-slate-300 mb-2">Sin resultados para tu búsqueda</h3>
+              <p className="text-slate-600">Prueba con otros términos o quita los filtros aplicados.</p>
             </div>
-            <h3 className="text-xl font-semibold text-slate-300 mb-2">No se encontraron noticias</h3>
-            <p className="text-slate-600">Intenta cambiar los filtros o actualizar las fuentes.</p>
-          </div>
+          ) : (
+            <div className="text-center py-24">
+              <div className="bg-slate-800/50 border border-slate-700/50 rounded-full p-6 w-24 h-24 flex items-center justify-center mx-auto mb-5">
+                <CalendarClock className="h-10 w-10 text-slate-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-slate-300 mb-2">No hay noticias nuevas por ahora</h3>
+              <p className="text-slate-600">Aún no hay publicaciones recientes de las fuentes. Vuelve mañana para ver las novedades.</p>
+            </div>
+          )
         ) : (
           <>
             <p className="text-sm text-slate-600 mb-5">

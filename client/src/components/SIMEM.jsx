@@ -270,6 +270,17 @@ function SIMEM() {
           </div>
         </div>
 
+        {/* Rango de fechas del período seleccionado */}
+        {!loading && !error && datos?.meta?.startDate && (
+          <p className="flex items-center gap-1.5 text-xs text-slate-500 -mt-4 mb-8">
+            <Clock className="h-3.5 w-3.5 text-slate-600" />
+            Mostrando datos del{" "}
+            <span className="text-slate-300 font-medium">{formatFecha(datos.meta.startDate)}</span>{" "}
+            al{" "}
+            <span className="text-slate-300 font-medium">{formatFecha(datos.meta.endDate)}</span>
+          </p>
+        )}
+
         {/* Error */}
         {error && !loading && (
           <div className="flex flex-col items-center justify-center py-24 text-center">
