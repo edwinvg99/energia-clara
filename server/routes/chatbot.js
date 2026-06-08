@@ -5,7 +5,7 @@ const router = express.Router();
 // Límite global diario como red de seguridad para no agotar la cuota gratuita de Gemini (1500 RPD)
 const RATE_LIMITS = {
   MAX_REQUESTS_PER_DAY_GLOBAL: 800,
-  MAX_OUTPUT_TOKENS: 600,
+  MAX_OUTPUT_TOKENS: 1024,
 };
 
 const rateLimitStore = {
@@ -97,12 +97,21 @@ TU ROL:
 
 CONTEXTO DE LA PLATAFORMA:
 - Energía Clara combate la desinformación sobre energías renovables en Colombia.
-- Tiene módulos educativos sobre: Transición Energética, Autogeneración, Generación Distribuida y Comunidades Energéticas.
-- Los usuarios pueden obtener certificados al aprobar exámenes.
-- Sección de NOTICIAS: La plataforma incluye una sección con noticias actualizadas sobre energías renovables en Colombia, obtenidas de fuentes oficiales y confiables como el Ministerio de Minas y Energía, SER Colombia (asociación de energías renovables), Semana Sostenible y El Tiempo. Los usuarios pueden filtrar noticias por categoría y fuente.
 - Normativas clave: Ley 1715/2014, Ley 2099/2021, Resolución CREG 030/2018.
 - Incentivos: deducción de renta, exclusión de IVA, exención de aranceles, depreciación acelerada.
 - Beneficios: 40% ahorro, 25 ton CO2/año evitadas, 70% autosuficiencia, ROI 5-7 años.
+
+SECCIONES DE LA PLATAFORMA (puedes orientar al usuario a la sección correcta):
+- Inicio: presentación general de Energía Clara.
+- Beneficios: ahorros, retorno de inversión (5-7 años), impacto ambiental, estabilidad tarifaria.
+- Proceso: las 5 etapas de implementación (evaluación inicial, socialización comunitaria, permisos y licencias, instalación, puesta en marcha).
+- Actores: roles del ecosistema (MinEnergía, UPME, CREG, operadores de red, sector privado, comunidades, banca verde, academia y ONGs).
+- Normativas: explica Ley 1715/2014, Ley 2099/2021, Resolución CREG 030/2018 e incentivos tributarios.
+- Educativo: 4 módulos con examen y certificado descargable en PDF: Transición Energética, Autogeneración, Generación Distribuida y Comunidades Energéticas. Se aprueba con 3/5 respuestas correctas.
+- Noticias: noticias actualizadas de fuentes oficiales (Ministerio de Minas y Energía, SER Colombia, Semana Sostenible, El Tiempo). Se puede filtrar por categoría y fuente.
+- Documentos CREG: repositorio de documentos oficiales de la Comisión de Regulación de Energía y Gas (CREG): resoluciones, circulares, autos y proyectos regulatorios. Sirven para consultar de primera mano la regulación vigente del sector eléctrico y de gas en Colombia (tarifas, conexión, generación distribuida, autogeneración, mercado, etc.). La CREG es la entidad que regula y fija las reglas del mercado energético.
+- Mercado de Energía (SIMEM): datos del mercado mayorista de energía. Muestra la generación por tipo de fuente (Hidráulica, Térmica, Solar, Eólica), el % de energía renovable de la matriz y cómo funciona el mercado mayorista en Colombia.
+- Indicadores: indicadores del mercado eléctrico colombiano: precio de bolsa, factor de emisión de CO₂, volumen útil de embalses, y qué reflejan sobre la salud del sistema energético.
 
 REGLAS:
 - Responde SIEMPRE en español.
@@ -114,9 +123,23 @@ REGLAS:
 // ============================================================
 // ENDPOINT PRINCIPAL DEL CHATBOT
 // ============================================================
+// Nombre legible de la sección según la ruta del frontend, para dar contexto a la IA
+const ROUTE_SECTION_NAME = {
+  '/': 'Inicio',
+  '/beneficios': 'Beneficios',
+  '/procesos': 'Proceso de implementación',
+  '/actores': 'Actores clave',
+  '/normativas': 'Normativas',
+  '/noticias': 'Noticias',
+  '/educativo': 'Módulos Educativos',
+  '/documentos-creg': 'Documentos CREG',
+  '/mercado-energia': 'Mercado de Energía (SIMEM)',
+  '/indicadores': 'Indicadores del Mercado Eléctrico',
+};
+
 router.post('/message', async (req, res) => {
   try {
-    const { message, predefinedKey } = req.body;
+    const { message, predefinedKey, route } = req.body;
 
     // Si es una pregunta predeterminada, responder directamente (NO consume API)
     if (predefinedKey && PREDEFINED_QA[predefinedKey]) {
@@ -149,22 +172,32 @@ router.post('/message', async (req, res) => {
       });
     }
 
-    // Llamar a Gemini API
+    // Llamar a Gemini API.
+    // Modelo configurable por env (GEMINI_MODEL). Por defecto gemini-2.5-flash-lite:
+    //  - SÍ tiene cuota en el tier gratuito de este proyecto (gemini-2.0-flash da limit:0).
+    //  - El "thinking" viene desactivado por defecto, así que NO se come maxOutputTokens
+    //    (lo que con gemini-2.5-flash truncaba o vaciaba las respuestas).
     const { GoogleGenerativeAI } = require('@google/generative-ai');
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash',
+      model: process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite',
       generationConfig: {
         maxOutputTokens: RATE_LIMITS.MAX_OUTPUT_TOKENS,
         temperature: 0.7,
       },
     });
 
+    // Inyectar la sección donde está el usuario para respuestas contextuales
+    const sectionName = route ? ROUTE_SECTION_NAME[route] : null;
+    const systemPrompt = sectionName
+      ? `${SYSTEM_CONTEXT}\n\nCONTEXTO ACTUAL: El usuario está viendo la sección "${sectionName}" de la plataforma. Si su pregunta es ambigua, interprétala en el contexto de esa sección.`
+      : SYSTEM_CONTEXT;
+
     const chat = model.startChat({
       history: [
         {
           role: 'user',
-          parts: [{ text: 'Comportate según estas instrucciones: ' + SYSTEM_CONTEXT }],
+          parts: [{ text: 'Comportate según estas instrucciones: ' + systemPrompt }],
         },
         {
           role: 'model',
@@ -174,7 +207,23 @@ router.post('/message', async (req, res) => {
     });
 
     const result = await chat.sendMessage(message.trim());
-    const response = result.response.text();
+
+    // Extraer el texto de forma segura: si la respuesta viene vacía (p. ej. truncada
+    // o bloqueada), no lanzamos error genérico, devolvemos un mensaje útil.
+    let response = '';
+    try {
+      response = result.response.text();
+    } catch {
+      response = '';
+    }
+
+    if (!response || response.trim().length === 0) {
+      return res.json({
+        response: 'No pude generar una respuesta completa para esa consulta. ¿Puedes reformularla o ser más específico? También puedes usar las preguntas sugeridas.',
+        source: 'gemini',
+        remainingQueries: null,
+      });
+    }
 
     incrementRateLimit();
 
@@ -185,7 +234,11 @@ router.post('/message', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error en chatbot:', error.message);
+    // Log detallado para diagnóstico (modelo, cuota, status real de Gemini)
+    console.error('Error en chatbot:', error?.message);
+    if (error?.status) console.error('  -> status:', error.status);
+    if (error?.statusText) console.error('  -> statusText:', error.statusText);
+    if (error?.errorDetails) console.error('  -> errorDetails:', JSON.stringify(error.errorDetails));
 
     // Manejar errores específicos de Gemini
     if (error.message?.includes('429') || error.message?.includes('quota')) {

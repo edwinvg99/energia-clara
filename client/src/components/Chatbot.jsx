@@ -178,7 +178,9 @@ function Chatbot() {
     setShowQuestions(false);
 
     try {
-      const body = predefinedKey ? { predefinedKey } : { message: message.trim() };
+      const body = predefinedKey
+        ? { predefinedKey }
+        : { message: message.trim(), route: getRouteKey(location.pathname) };
 
       const response = await fetch(`${API_URL}/api/chatbot/message`, {
         method: 'POST',
