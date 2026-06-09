@@ -154,7 +154,7 @@ function Procesos() {
               <p className="font-bold text-white text-sm mb-1">Tiempo estimado del proceso completo</p>
               <p className="text-slate-400 text-sm leading-relaxed">
                 El proceso completo puede tomar entre{" "}
-                <span className="font-bold text-sky-400">3 a 6 meses</span> dependiendo del tamaño del proyecto,
+                <span className="font-bold text-sky-400">6 a 9 meses</span> dependiendo del tamaño del proyecto,
                 la complejidad de los trámites y la disponibilidad de recursos financieros y técnicos.
               </p>
             </div>
