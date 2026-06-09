@@ -17,9 +17,9 @@ const C = {
 const pasos = [
   { id: "01", titulo: "Evaluación Inicial",   descripcion: "Análisis del consumo energético actual de la comunidad y viabilidad técnica del sitio",  puntos: ["Medición de consumo promedio", "Evaluación de espacio disponible", "Análisis de recursos solares/eólicos"], Icono: ClipboardList, duracion: "2–4 semanas" },
   { id: "02", titulo: "Socialización",        descripcion: "Presentación del proyecto a la comunidad y construcción de consenso",                     puntos: ["Asambleas informativas", "Resolución de dudas", "Votación y aprobación"],                           Icono: Users,         duracion: "3–6 semanas" },
-  { id: "03", titulo: "Trámites y Permisos",  descripcion: "Gestión de documentación legal y normativa requerida",                                    puntos: ["Solicitud ante operador de red", "Permisos municipales", "Registro ante autoridades"],             Icono: FileText,      duracion: "4–8 semanas" },
-  { id: "04", titulo: "Instalación",          descripcion: "Implementación física del sistema por personal certificado",                               puntos: ["Montaje de equipos", "Conexión eléctrica", "Pruebas de funcionamiento"],                         Icono: Wrench,        duracion: "2–4 semanas" },
-  { id: "05", titulo: "Puesta en Marcha",     descripcion: "Activación del sistema y monitoreo inicial",                                               puntos: ["Inspección final", "Capacitación a usuarios", "Inicio de generación"],                          Icono: CheckCircle2,  duracion: "1 semana"    },
+  { id: "03", titulo: "Trámites y Permisos",  descripcion: "Gestión de documentación legal y normativa requerida",                                    puntos: ["Solicitud ante operador de red", "Permisos municipales", "Registro ante autoridades"],             Icono: FileText,      duracion: "8–12 semanas" },
+  { id: "04", titulo: "Instalación",          descripcion: "Implementación física del sistema por personal certificado",                               puntos: ["Montaje de equipos", "Conexión eléctrica", "Pruebas de funcionamiento"],                         Icono: Wrench,        duracion: "8–12 semanas" },
+  { id: "05", titulo: "Puesta en Marcha",     descripcion: "Activación del sistema y monitoreo inicial",                                               puntos: ["Inspección final", "Capacitación a usuarios", "Inicio de generación"],                          Icono: CheckCircle2,  duracion: "3–4 semanas"    },
 ];
 
 function Procesos() {
