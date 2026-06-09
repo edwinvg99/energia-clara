@@ -37,16 +37,16 @@ export const modulosEducativos = [
     ],
     recursos: [
       {
-        nombre: 'Guía de Transición Energética en Colombia',
-        tipo: 'Documento PDF',
+        nombre: 'Hoja de Ruta de la Transición Energética Justa (MinEnergía)',
+        tipo: 'Documento oficial',
         icono: '📄',
-        url: 'https://www.minenergia.gov.co'
+        url: 'https://www.minenergia.gov.co/es/micrositios/transicion-energetica-justa/'
       },
       {
-        nombre: 'Video: Futuro Energético Sostenible',
+        nombre: 'Video: ¿Qué es la transición energética? 4 claves para entenderla',
         tipo: 'Video explicativo',
         icono: '🎥',
-        url: 'https://www.youtube.com/watch?v=example'
+        url: 'https://www.youtube.com/watch?v=uJPVMpC8AHM'
       }
     ],
     examen: [
@@ -147,16 +147,22 @@ export const modulosEducativos = [
     ],
     recursos: [
       {
-        nombre: 'Calculadora Solar Residencial',
-        tipo: 'Herramienta interactiva',
+        nombre: 'Autogeneradores de energía – AGPE y GD (EPM)',
+        tipo: 'Documento técnico',
         icono: '🧮',
-        url: 'https://www.upme.gov.co'
+        url: 'https://www.epm.com.co/clientesyusuarios/autogeneradores/'
       },
       {
-        nombre: 'Normativa Técnica RETIE',
+        nombre: 'Autogeneración a pequeña escala y generación distribuida (CREG)',
         tipo: 'Documento legal',
         icono: '📋',
-        url: 'https://www.minenergia.gov.co/retie'
+        url: 'https://creg.gov.co/publicaciones/15064/autogeneracion-a-pequena-escala-y-generacion-distribuida/'
+      },
+      {
+        nombre: 'Video: Cómo instalar paneles solares en Colombia',
+        tipo: 'Video explicativo',
+        icono: '🎥',
+        url: 'https://www.youtube.com/watch?v=lkLuAxGy7Dk'
       }
     ],
     examen: [
@@ -257,16 +263,16 @@ export const modulosEducativos = [
     ],
     recursos: [
       {
-        nombre: 'Resolución CREG 030 de 2018',
-        tipo: 'Marco legal',
+        nombre: 'Autogeneración y Generación Distribuida (CREG)',
+        tipo: 'Documento legal',
         icono: '⚖️',
-        url: 'https://www.creg.gov.co'
+        url: 'https://creg.gov.co/publicaciones/15064/autogeneracion-a-pequena-escala-y-generacion-distribuida/'
       },
       {
-        nombre: 'Casos de Éxito en Colombia',
-        tipo: 'Estudios de caso',
-        icono: '📊',
-        url: 'https://www.upme.gov.co'
+        nombre: 'Video: Webinar de Generación Distribuida',
+        tipo: 'Video explicativo',
+        icono: '🎥',
+        url: 'https://www.youtube.com/watch?v=16Ex7d-d-QI'
       }
     ],
     examen: [
@@ -375,16 +381,16 @@ export const modulosEducativos = [
     ],
     recursos: [
       {
-        nombre: 'Guía para Comunidades Energéticas',
-        tipo: 'Manual práctico',
+        nombre: 'Estrategia Nacional de Comunidades Energéticas (MinEnergía)',
+        tipo: 'Documento oficial',
         icono: '📘',
-        url: 'https://www.minenergia.gov.co'
+        url: 'https://www.minenergia.gov.co/es/comunidades-energeticas/'
       },
       {
-        nombre: 'Red Colombiana de Comunidades Energéticas',
-        tipo: 'Red de contactos',
-        icono: '🌐',
-        url: 'https://www.comunidadesenergeticas.co'
+        nombre: 'Video: Taller sobre la regulación de Comunidades Energéticas',
+        tipo: 'Video explicativo',
+        icono: '🎥',
+        url: 'https://www.youtube.com/watch?v=x5bSZcR7N2I'
       }
     ],
     examen: [

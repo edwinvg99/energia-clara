@@ -94,6 +94,17 @@ mongoose.connect(process.env.MONGO_URI)
     if (count === 0) {
       await Modulo.insertMany(modulosData);
       console.log(`Seed: ${modulosData.length} módulos educativos insertados`);
+    } else {
+      // Sincroniza los recursos de cada módulo con el archivo fuente en cada arranque,
+      // para que actualizaciones de enlaces se reflejen sin recrear la base de datos.
+      const ops = modulosData.map((m) => ({
+        updateOne: {
+          filter: { id: m.id },
+          update: { $set: { recursos: m.recursos } },
+        },
+      }));
+      const res = await Modulo.bulkWrite(ops);
+      console.log(`Sync: recursos de módulos actualizados (${res.modifiedCount} modificados)`);
     }
   })
   .catch(err => console.error(err));
